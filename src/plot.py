@@ -10,6 +10,7 @@ plt.rc('text', usetex=True)
 
 LCLR = 'tab:gray'
 RCLR = 'tab:gray'
+dpi = 500
 
 ###############################################################################
 
@@ -31,7 +32,7 @@ def plot_path(dest, left, right, samples, control=None, show_cones=False):
 
   plt.gca().set_aspect('equal', adjustable='box')
   plt.axis('off')
-  plt.savefig(dest, bbox_inches='tight')
+  plt.savefig(dest, bbox_inches='tight', dpi=dpi)
 
 
 def plot_corners(dest, left, right, samples, is_corner):
@@ -52,7 +53,7 @@ def plot_corners(dest, left, right, samples, is_corner):
 
   plt.gca().set_aspect('equal', adjustable='box')
   plt.axis('off')
-  plt.savefig(dest, bbox_inches='tight')
+  plt.savefig(dest, bbox_inches='tight', dpi=dpi)
 
 
 def plot_trajectory(dest, left, right, samples, velocities):
@@ -75,4 +76,4 @@ def plot_trajectory(dest, left, right, samples, velocities):
   )
   plt.gca().set_aspect('equal', adjustable='box')
   plt.axis('off')
-  plt.savefig(dest, bbox_inches='tight')
+  plt.savefig(dest, bbox_inches='tight', dpi=dpi)
