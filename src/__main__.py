@@ -144,3 +144,4 @@ if args.plot_trajectory or args.plot_all:
     track.left, track.right, trajectory.path.position(trajectory.s),
     trajectory.velocity.v
   )
+print(track.size)

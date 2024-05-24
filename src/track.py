@@ -18,6 +18,7 @@ class Track:
     self.closed = is_closed(self.left, self.right)
     self.size = self.left[0].size - int(self.closed)
     self.diffs = self.right - self.left
+    self.widths = np.sqrt(self.diffs[0]**2 + self.diffs[1]**2)
     self.mid = Path(self.control_points(np.full(self.size, 0.5)), self.closed)
     self.length = self.mid.dists[-1]
     
