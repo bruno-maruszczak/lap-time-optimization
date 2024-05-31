@@ -17,6 +17,7 @@ class Method(IntEnum):
     DIRECT = 2
     COMPROMISE_SECTORS = 3
     COMPROMISE_ESTIMATED = 4
+    BAYES = 5
 
 
 parser = argparse.ArgumentParser(description='Racing line optimisation')
@@ -149,4 +150,5 @@ if args.plot_trajectory or args.plot_all:
         track.left, track.right, trajectory.path.position(trajectory.s),
         trajectory.velocity.v
     )
-print(track.size)
+print(f" track size: {track.size}")
+print(f"widths: {len(track.widths)}")

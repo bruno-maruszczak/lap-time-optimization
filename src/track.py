@@ -17,9 +17,28 @@ class Track:
         self.closed = is_closed(self.left, self.right)
         self.size = self.left[0].size - int(self.closed)
         self.diffs = self.right - self.left
-        self.widths = np.sqrt(self.diffs[0]**2 + self.diffs[1]**2)
+        # print(f"left: {self.left[0][0]} \nright: {self.right[0][0]} \ndiffs: {self.diffs[0][0]}")
         self.mid = Path(self.control_points(np.full(self.size, 0.5)), self.closed)
         self.length = self.mid.dists[-1]
+        
+        ##########################################################
+        # for Bayesian:
+        self.widths = np.sqrt(self.diffs[0]**2 + self.diffs[1]**2)
+        self.mid_controls = [[], []]
+        # Taking every 5th control point
+        
+        for i in range(0, len(self.mid.controls[0]), 5):
+            self.mid_controls[0].append(self.mid.controls[0][i])
+            self.mid_controls[1].append(self.mid.controls[1][i])
+        #########################################################
+    
+    def read_cones(self, path):
+        """Read cone coordinates from a JSON file."""
+        track_data = json.load(open(path))
+        self.name = track_data["name"]
+        self.left = np.array([track_data["left"]["x"], track_data["left"]["y"]])
+        self.right = np.array([track_data["right"]["x"], track_data["right"]["y"]])
+        print("[ Imported {} ]".format(self.name))
     
 
     def avg_curvature(self, s):

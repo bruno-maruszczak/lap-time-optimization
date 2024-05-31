@@ -10,8 +10,7 @@ class Path:
         self.controls = controls
         self.closed = closed
         self.dists = cumulative_distances(controls)
-        self.spline, _ = splprep(
-            controls, u=self.dists, k=3, s=0, per=self.closed)
+        self.spline, _ = splprep(controls, u=self.dists, k=3, s=0, per=self.closed)
         self.length = self.dists[-1]
 
     def position(self, s=None):

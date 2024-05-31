@@ -7,6 +7,7 @@ from multiprocessing import Pool
 from path import Path
 from plot import plot_path
 from scipy.optimize import Bounds, minimize, minimize_scalar
+from scipy.interpolate import splev, splprep
 from track import Track
 from utils import define_corners, idx_modulo
 from velocity import VelocityProfile
@@ -42,8 +43,33 @@ class Trajectory:
 
     def lap_time(self):
         """Calculate lap time from the velocity profile."""
+        # print(self.s)
         return np.sum(np.diff(self.s) / self.velocity.v)
+    
+    ##################################################
+    # for Bayesian optimasition
+    def CalcMinTime(self, waipoints, track_length):
+        """Minimum time to traverse on a fixed trajectory."""
+        # Method for Bayesian optimization
+        
+        # Fit cubic splines on the waypoints
+        # waipoints are values in between the cones
+        tck, u = splprep([waipoints[0], waipoints[1]])
+        
+        # Re-sample waypoints with finer discretization
+        u_fine = np.linspace(0, track_length, num=2*len(waipoints))
+        x_fine, y_fine = splev(u_fine, tck)
+        
+        # Update the length of track and velocities
 
+        # self.update_velocity()
+            
+        self.lap_time()
+        
+    def Bayesian():
+        j = [i for i in range(1,11)]
+        pass
+    ##################################################
     def minimise_curvature(self):
         """Generate a path minimising curvature."""
 
