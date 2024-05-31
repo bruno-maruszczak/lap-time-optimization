@@ -24,12 +24,15 @@ class Track:
         ##########################################################
         # for Bayesian:
         self.widths = np.sqrt(self.diffs[0]**2 + self.diffs[1]**2)
-        self.mid_controls = [[], []]
+        self.mid_controls = self.mid.controls
         # Taking every 5th control point
+        self.mid_controls_decongested = [[], []]
+        self.widths_decongested = []
         
         for i in range(0, len(self.mid.controls[0]), 5):
-            self.mid_controls[0].append(self.mid.controls[0][i])
-            self.mid_controls[1].append(self.mid.controls[1][i])
+            self.mid_controls_decongested[0].append(self.mid.controls[0][i])
+            self.mid_controls_decongested[1].append(self.mid.controls[1][i])
+            self.widths_decongested.append(self.widths[i])
         #########################################################
     
     def read_cones(self, path):

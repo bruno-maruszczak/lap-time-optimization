@@ -39,6 +39,10 @@ methods.add_argument('--compromise',
                      action='store_const', dest='method', const=Method.COMPROMISE,
                      help='minimise an optimal length-curvature compromise'
                      )
+methods.add_argument('--bayes',
+                     action='store_const', dest='method', const=Method.BAYES,
+                     help='minimise time via bayesian optimisation'
+                     )
 methods.add_argument('--laptime',
                      action='store_const', dest='method', const=Method.DIRECT,
                      help='directly minimise lap time'
@@ -104,6 +108,9 @@ elif args.method is Method.COMPROMISE_ESTIMATED:
     epsilon = 0.406 * track.avg_curvature(trajectory.s[mask])
     print("  epsilon = {:.4f}".format(epsilon))
     run_time = trajectory.minimise_compromise(epsilon)
+elif args.method is Method.BAYES:
+    print("[ BAYES  ]")
+    run_time = trajectory.Bayesian()
 else:
     raise ValueError("Did not recognise args.method {}".format(args.method))
 

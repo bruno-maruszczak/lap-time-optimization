@@ -4,14 +4,19 @@ import os
 import time
 from functools import partial
 from multiprocessing import Pool
-from path import Path
-from plot import plot_path
 from scipy.optimize import Bounds, minimize, minimize_scalar
 from scipy.interpolate import splev, splprep
 from track import Track
 from utils import define_corners, idx_modulo
 from velocity import VelocityProfile
 
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import Matern
+
+from track import Track
+from vehicle import Vehicle
+from path import Path
+from plot import plot_path
 
 class Trajectory:
     """
@@ -19,13 +24,20 @@ class Trajectory:
     racing line. Samples are taken every metre.
     """
 
-    def __init__(self, track, vehicle):
+    def __init__(self, track: 'Track', vehicle: 'Vehicle'):
         """Store track and vehicle and initialise a centerline path."""
         self.track = track
         self.ns = math.ceil(track.length)
         self.update(np.full(track.size, 0.5))
         self.vehicle = vehicle
         self.velocity = None
+        
+        # for Bayesian
+        self.length = track.length
+        self.mid_waipoints = track.mid_controls
+        self.widths = track.widths
+        self.mid_controls_decongested = track.mid_controls_decongested
+        self.widths_decongested = track.widths_decongested
 
     def update(self, alphas):
         """Update control points and the resulting path."""
@@ -33,6 +45,9 @@ class Trajectory:
         self.path = Path(self.track.control_points(alphas), self.track.closed)
         # Sample every metre
         self.s = np.linspace(0, self.path.length, self.ns)
+        
+        # for Bayesian
+        self.path_middle = self.path.spline
 
     def update_velocity(self):
         """Generate a new velocity profile for the current path."""
@@ -48,7 +63,32 @@ class Trajectory:
     
     ##################################################
     # for Bayesian optimasition
-    def CalcMinTime(self, waipoints, track_length):
+    def move_xy_by_distance(self, spline, x, y, distance):
+        """Get x y coordinates after moving wayponts in the direction normal to self.path_middle"""
+        # tck is already the spline representation (t, c, k)
+    
+        # 1. Find the closest point on the spline to (x, y)
+        def distance_to_point(t):
+            xt, yt = splev(t, spline)
+            return np.sqrt((xt - x) ** 2 + (yt - y) ** 2)
+        
+        res = minimize_scalar(distance_to_point, bounds=(0, 1), method='bounded')
+        t_closest = res.x
+        
+        # 2. Calculate the normal to the spline at this point
+        dx, dy = splev(t_closest, spline, der=1)
+        normal = np.array([-dy, dx])
+        normal /= np.linalg.norm(normal)
+        
+        # 3. Move the point (x, y) by the given distance in the normal direction
+        new_x = x + distance * normal[0]
+        new_y = y + distance * normal[1]
+        
+        return new_x, new_y
+
+# Example usage
+    
+    def calcMinTime(self, waipoints, track_length):
         """Minimum time to traverse on a fixed trajectory."""
         # Method for Bayesian optimization
         
@@ -61,15 +101,67 @@ class Trajectory:
         x_fine, y_fine = splev(u_fine, tck)
         
         # Update the length of track and velocities
-
-        # self.update_velocity()
-            
-        self.lap_time()
+        self.update_velocity()
+        # Step 4: Return minimum time to traverse on (x_fine, y_fine)
         
-    def Bayesian():
-        j = [i for i in range(1,11)]
-        pass
+        return self.lap_time()
+
+    def Bayesian(self):
+        """Racing line using Bayesian optimization."""
+        # Initialization
+        waypoints_list = []
+        lap_times = []
+        
+        # print(self.widths)
+        # print(len(self.widths), len(self.mid_waipoints[0]))
+        
+        for _ in range(10):
+            # Step 3: Randomly sample a new trajectory parametrized by waypoints
+            waypoints = np.random.uniform(-0.99,0.99)#*self.widths[i]
+            waypoints_list.append(waypoints)
+            
+            # Step 4: Compute min time to traverse using Algorithm 1
+            lap_time = self.calcMinTime(self.mid_waipoints, self.length)
+            lap_times.append(lap_time)
+        
+        # Step 6: Initialize training data
+        D = list(zip(waypoints_list, lap_times))
+        
+        # Step 7: Learn a GP model τ ∼ GP(w)
+        X_train = np.array([w.flatten() for w in waypoints_list])
+        y_train = np.array(lap_times)
+        kernel = Matern(nu=2.5)
+        gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=10)
+        gp.fit(X_train, y_train)
+        
+        # Bayesian Optimization loop
+        converged = False
+        while not converged:
+            # Step 11: Determine candidate trajectory w?
+            w_candidates = np.random.rand(10, 2, self.track.size)
+            X_candidates = np.array([w.flatten() for w in w_candidates])
+            y_candidates, _ = gp.predict(X_candidates, return_std=True)
+            w_best = w_candidates[np.argmin(y_candidates)]
+            
+            # Step 12: Compute min time to traverse τ? using Algorithm 1
+            tau_best = self.calcMinTime(w_best)
+            
+            # Step 13: Add new sample to training data
+            D.append((w_best, tau_best))
+            X_train = np.array([w.flatten() for w, _ in D])
+            y_train = np.array([t for _, t in D])
+            
+            # Step 14: Update the GP model using D
+            gp.fit(X_train, y_train)
+            
+            # Check for convergence
+            if len(lap_times) > 10 and np.std(lap_times[-10:]) < 1e-3:
+                converged = True
+
+        # Step 16: Return w* and corresponding waypoints (xi, yi)
+        return w_best, w_best[0], w_best[1]
     ##################################################
+    
     def minimise_curvature(self):
         """Generate a path minimising curvature."""
 
