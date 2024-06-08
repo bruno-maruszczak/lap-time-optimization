@@ -46,9 +46,6 @@ class Trajectory:
         self.path = Path(self.track.control_points(alphas), self.track.closed)
         # Sample every metre
         self.s = np.linspace(0, self.path.length, self.ns)
-        
-        # for Bayesian
-        self.path_middle = self.path.spline
 
     def update_velocity(self):
         """Generate a new velocity profile for the current path."""
@@ -60,10 +57,45 @@ class Trajectory:
     def lap_time(self):
         """Calculate lap time from the velocity profile."""
         # print(self.s)
-        return np.sum(np.diff(self.s) / self.velocity.v)
+        time_sum = np.sum(np.diff(self.s) / self.velocity.v)
+        print(time_sum)
+        return time_sum
     
     ##################################################
-    # for Bayesian optimasition
+    # for Bayesian optimisation
+    def update_Bayesian(self, waypoints):
+        """Update control points and the resulting path."""
+        
+        print(f"update Bayesian: ")
+        self.path = Path(waypoints, self.track.closed)
+        # Sample every metre
+        self.s = np.linspace(0, self.path.length, self.ns)
+        
+        """Generate a new velocity profile for the current path."""
+        s = self.s[:-1]
+        s_max = self.path.length if self.track.closed else None
+        k = self.path.curvature(s)
+        self.velocity = VelocityProfile(self.vehicle, s, k, s_max)
+    
+    
+    def calcMinTime(self, waypoints):
+        """Minimum time to traverse on a fixed trajectory for Bayesian optimisation."""
+        # Method for Bayesian optimization
+        
+        # Fit cubic splines on the waypoints
+        # waypoints are values in between the cones
+        tck, u = splprep([waypoints[0], waypoints[1]])
+        
+        # Re-sample waypoints with finer discretization
+        u_fine = np.linspace(0, self.length, num=2*len(waypoints[0]))
+        x_fine, y_fine = splev(u_fine, tck)
+        
+        # Update the length of track and velocities
+        self.update_Bayesian(waypoints)
+        # Step 4: Return minimum time to traverse on (x_fine, y_fine)
+        
+        return self.lap_time()
+    
     def move_xy_by_distance(self, spline, x, y, distance):
         """Get x y coordinates after moving wayponts in the direction normal to self.path_middle"""
         # tck is already the spline representation (t, c, k)
@@ -87,73 +119,48 @@ class Trajectory:
         
         return new_x, new_y
 
-# Example usage
-    
-    def calcMinTime(self, waipoints, track_length):
-        """Minimum time to traverse on a fixed trajectory."""
-        # Method for Bayesian optimization
-        
-        # Fit cubic splines on the waypoints
-        # waipoints are values in between the cones
-        tck, u = splprep([waipoints[0], waipoints[1]])
-        
-        # Re-sample waypoints with finer discretization
-        u_fine = np.linspace(0, track_length, num=2*len(waipoints))
-        x_fine, y_fine = splev(u_fine, tck)
-        
-        # Update the length of track and velocities
-        self.update_velocity()
-        # Step 4: Return minimum time to traverse on (x_fine, y_fine)
-        
-        return self.lap_time()
-
     def Bayesian(self):
         """Racing line using Bayesian optimization."""
         # Initialization
         waypoints_list = []
         lap_times = []
         
-        # print(self.widths)
-        # print(len(self.widths), len(self.mid_waipoints[0]))
-        
-        new_x_list = []
-        new_y_list = []
         x = self.mid_controls_decongested[0] #self.mid_waipoints[0]
         y = self.mid_controls_decongested[1] #self.mid_waipoints[1]
         widths = self.widths_decongested #self.widths
         
-        #the bigger s, the more smooth spline is, 0 means spline goes through every point
-        tck, u = splprep([x, y], s=0)
-        # print(len((self.mid_waipoints[0])))
-        # print(len(self.widths))
-        for i in range (len(x)):
-            # random distance to move track in the normal direction
-            distance = np.random.uniform(-0.99,0.99) * widths[i] / 2
-            
-            x_new, y_new = self.move_xy_by_distance(tck, x[i], y[i], distance)
-            new_x_list.append(x_new)
-            new_y_list.append(y_new)
-        plt.scatter(x, y, label='Dane oryginalne')
-        plt.scatter(new_x_list, new_y_list, label='po przesunieciu')
-        plt.legend()
-        # plt.show()
-        plt.savefig('mid_points_and_after_moving_decongested.png')
+        # print(self.widths)
+        # print(len(self.widths), len(self.mid_waipoints[0]))
         
         
-        for _ in range(10):
-            # Step 3: Randomly sample a new trajectory parametrized by waypoints
-            waypoints = np.random.uniform(-0.99,0.99)#*self.widths[i]
-            waypoints_list.append(waypoints)
+        for j in range(10):
+            """Randomly sample a new trajectory parametrized by waypoints"""
+            new_x_list = []
+            new_y_list = []
+            #the bigger s, the more smooth spline is, 0 means spline goes through every point
+            tck, u = splprep([x, y], s=0)
+            # print(len((self.mid_waipoints[0])))
+            # print(len(self.widths))
+            for i in range (len(x)):
+                # random distance to move track in the normal direction
+                distance = np.random.uniform(-0.99,0.99) * widths[i] / 2
+                
+                x_new, y_new = self.move_xy_by_distance(tck, x[i], y[i], distance)
+                new_x_list.append(x_new)
+                new_y_list.append(y_new)
+                
+            plt.scatter(x, y, label='Dane oryginalne')
+            plt.scatter(new_x_list, new_y_list, label='po przesunieciu')
+            plt.legend()
+            # plt.show()
+            plt.savefig(f'img/mid_after_decongested_{j}.png')
             
             # Step 4: Compute min time to traverse using Algorithm 1
-            lap_time = self.calcMinTime(self.mid_waipoints, self.length)
-            
+            lap_time = self.calcMinTime((new_x_list, new_y_list))
             lap_times.append(lap_time)
-            
+            waypoints_list.append([new_x_list, new_y_list])
            
             
-            
-        
         # Step 6: Initialize training data
         D = list(zip(waypoints_list, lap_times))
         

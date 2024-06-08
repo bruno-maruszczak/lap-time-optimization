@@ -128,7 +128,7 @@ print()
 ###############################################################################
 # Plotting
 
-method_dirs = ['curvature', 'compromise', 'laptime', 'sectors', 'estimated']
+method_dirs = ['curvature', 'compromise', 'laptime', 'sectors', 'estimated', 'bayesian']
 plot_dir = os.path.join(
     os.path.dirname(__file__), '..', 'data', 'plots', track.name,
     method_dirs[args.method]
