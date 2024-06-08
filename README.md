@@ -14,9 +14,12 @@ problemów może być parę.
 - po trzecie trzeba zobaczyć czy podanie jako warunków początkowych do minimalizacji waypointów z najlepszym czasem nie poprawi wyników. -> done, nie wiem czy poprawiło XD
 
 
+
  ConvergenceWarning: lbfgs failed to converge (status=2):
 ABNORMAL_TERMINATION_IN_LNSRCH.
 
 Increase the number of iterations (max_iter) or scale the data as shown in:
     https://scikit-learn.org/stable/modules/preprocessing.html
   _check_optimize_result("lbfgs", opt_res)
+
+  TODO: komentarze dopisac
