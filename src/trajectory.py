@@ -6,6 +6,8 @@ from functools import partial
 from multiprocessing import Pool
 from scipy.optimize import Bounds, minimize, minimize_scalar
 from scipy.interpolate import splev, splprep
+from scipy.stats import norm
+
 from track import Track
 from utils import define_corners, idx_modulo
 from velocity import VelocityProfile
@@ -39,6 +41,8 @@ class Trajectory:
         self.widths = track.widths
         self.mid_controls_decongested = track.mid_controls_decongested
         self.widths_decongested = track.widths_decongested
+        self.best = []
+        self.sigma = []
 
     def update(self, alphas):
         """Update control points and the resulting path."""
@@ -63,7 +67,7 @@ class Trajectory:
     
     ##################################################
     # for Bayesian optimisation
-    def update_Bayesian(self, waypoints):
+    def updateBayesian(self, waypoints):
         """Update control points and the resulting path."""
         
         print(f"update Bayesian: ")
@@ -82,16 +86,25 @@ class Trajectory:
         """Minimum time to traverse on a fixed trajectory for Bayesian optimisation."""
         # Method for Bayesian optimization
         
+        print("calcMinTime")
+        
         # Fit cubic splines on the waypoints
         # waypoints are values in between the cones
-        tck, u = splprep([waypoints[0], waypoints[1]])
+        tck, u = splprep([waypoints[0], waypoints[1]], s = 3)
         
         # Re-sample waypoints with finer discretization
-        u_fine = np.linspace(0, self.length, num=2*len(waypoints[0]))
+        u_fine = np.linspace(0, 1, num=2*len(waypoints[0])) # in documentation, they starts with 21 (they advise <30) waypoints and do finer discretization with 100 waypoints
         x_fine, y_fine = splev(u_fine, tck)
         
+        # for debugging
+        # plt.figure(); plt.scatter(waypoints[0], waypoints[1], label='Dane oryginalne')
+        # plt.scatter(x_fine, y_fine, label='po zdublowaniu')
+        # plt.legend()
+        # # plt.show()
+        # plt.savefig(f'img/points_multiplication.png')
+    
         # Update the length of track and velocities
-        self.update_Bayesian(waypoints)
+        self.updateBayesian((x_fine, y_fine))
         # Step 4: Return minimum time to traverse on (x_fine, y_fine)
         
         return self.lap_time()
@@ -118,54 +131,76 @@ class Trajectory:
         new_y = y + distance * normal[1]
         
         return new_x, new_y
+    
+    def expected_improvement(self, x, gp, tau_best, n_params):
+        x = x.reshape(-1, n_params)
+        tau_mean, sigma = gp.predict(x, return_std=True)
+        with np.errstate(divide='warn'):
+            imp = tau_best - tau_mean
+            Z = imp / sigma
+            ei = imp * norm.cdf(Z) + sigma * norm.pdf(Z)
+            ei[sigma == 0.0] = 0.0
+            self.sigma.append(sigma)
+        return ei
+
+    def find_best_w(self, gp, tau_best, bounds, n_params):
+        
+        def min_obj(X):
+            return -(self.expected_improvement(X, gp, tau_best, n_params))
+
+        x0 = np.random.uniform(bounds[:, 0], bounds[:, 1])
+        res = minimize(min_obj, x0=x0, bounds=bounds, method='L-BFGS-B')
+        return res.x
 
     def Bayesian(self):
         """Racing line using Bayesian optimization."""
         # Initialization
-        waypoints_list = []
+        distances_w_list = [] # distances used for learning gp model
         lap_times = []
         
-        x = self.mid_controls_decongested[0] #self.mid_waipoints[0]
-        y = self.mid_controls_decongested[1] #self.mid_waipoints[1]
+        x_mid = self.mid_controls_decongested[0] #self.mid_waipoints[0]
+        y_mid = self.mid_controls_decongested[1] #self.mid_waipoints[1]
         widths = self.widths_decongested #self.widths
+        n = len(widths)
         
         # print(self.widths)
         # print(len(self.widths), len(self.mid_waipoints[0]))
         
-        
+        t0 = time.time()
         for j in range(10):
             """Randomly sample a new trajectory parametrized by waypoints"""
-            new_x_list = []
-            new_y_list = []
+            new_x_list = []; new_y_list = []
+            distance_w_list = []
             #the bigger s, the more smooth spline is, 0 means spline goes through every point
-            tck, u = splprep([x, y], s=0)
+            tck, u = splprep([x_mid, y_mid], s=0)
             # print(len((self.mid_waipoints[0])))
             # print(len(self.widths))
-            for i in range (len(x)):
+            for i in range (len(x_mid)):
                 # random distance to move track in the normal direction
                 distance = np.random.uniform(-0.99,0.99) * widths[i] / 2
+                distance_w_list.append(distance)
                 
-                x_new, y_new = self.move_xy_by_distance(tck, x[i], y[i], distance)
+                x_new, y_new = self.move_xy_by_distance(tck, x_mid[i], y_mid[i], distance)
                 new_x_list.append(x_new)
                 new_y_list.append(y_new)
                 
-            plt.scatter(x, y, label='Dane oryginalne')
-            plt.scatter(new_x_list, new_y_list, label='po przesunieciu')
-            plt.legend()
-            # plt.show()
-            plt.savefig(f'img/mid_after_decongested_{j}.png')
+            # plt.figure(); plt.scatter(x_mid, y_mid, label='Dane oryginalne')
+            # plt.scatter(new_x_list, new_y_list, label='po przesunieciu')
+            # plt.legend()
+            # # plt.show()
+            # plt.savefig(f'img/mid_after_decongested_{j}.png')
             
             # Step 4: Compute min time to traverse using Algorithm 1
             lap_time = self.calcMinTime((new_x_list, new_y_list))
             lap_times.append(lap_time)
-            waypoints_list.append([new_x_list, new_y_list])
+            distances_w_list.append(distance_w_list)
            
             
         # Step 6: Initialize training data
-        D = list(zip(waypoints_list, lap_times))
+        D = list(zip(distances_w_list, lap_times))
         
         # Step 7: Learn a GP model τ ∼ GP(w)
-        X_train = np.array([w.flatten() for w in waypoints_list])
+        X_train = np.array([np.ravel(w) for w in distances_w_list])
         y_train = np.array(lap_times)
         kernel = Matern(nu=2.5)
         gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=10)
@@ -174,29 +209,40 @@ class Trajectory:
         # Bayesian Optimization loop
         converged = False
         while not converged:
-            # Step 11: Determine candidate trajectory w?
-            w_candidates = np.random.rand(10, 2, self.track.size)
-            X_candidates = np.array([w.flatten() for w in w_candidates])
-            y_candidates, _ = gp.predict(X_candidates, return_std=True)
-            w_best = w_candidates[np.argmin(y_candidates)]
+            # Step 11: Determine candidate trajectory w*
+            tau_best = np.min(y_train)
+            bounds = np.array([[-w/2, w/2] for w in widths])
+            w_star = self.find_best_w(gp, tau_best, bounds, n)
             
-            # Step 12: Compute min time to traverse τ? using Algorithm 1
-            tau_best = self.calcMinTime(w_best)
+            
+            # Step 12: Compute min time to traverse τ* using Algorithm 1
+            # Also make sure we are in global x,y coordinates, not in widths coordinates
+            x_star_list = []; y_star_list = []
+            for i in range (len(x_mid)):
+                x_star, y_star = self.move_xy_by_distance(tck, x_mid[i], y_mid[i], w_star[i])
+                x_star_list.append(x_star); y_star_list.append(y_star)
+            tau_star = self.calcMinTime((x_star_list, y_star_list))
             
             # Step 13: Add new sample to training data
-            D.append((w_best, tau_best))
-            X_train = np.array([w.flatten() for w, _ in D])
+            D.append((w_star, tau_star))
+            X_train = np.array([np.ravel(w) for w, _ in D])
             y_train = np.array([t for _, t in D])
             
             # Step 14: Update the GP model using D
             gp.fit(X_train, y_train)
             
             # Check for convergence
-            if len(lap_times) > 10 and np.std(lap_times[-10:]) < 1e-3:
+            if len(y_train) > 10 and np.std(self.sigma[-10:]) < 1e-3:
                 converged = True
+                
+        x_star_list = []; y_star_list = []
+        for i in range (len(x_mid)):
+            x_star, y_star = self.move_xy_by_distance(tck, x_mid[i], y_mid[i], w_star[i])
+            x_star_list.append(x_star); y_star_list.append(y_star)
+            
+        self.best = (x_star_list, y_star_list)
 
-        # Step 16: Return w* and corresponding waypoints (xi, yi)
-        return w_best, w_best[0], w_best[1]
+        return time.time() - t0
     ##################################################
     
     def minimise_curvature(self):

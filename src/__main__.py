@@ -92,31 +92,44 @@ LENGTH = 10
 if args.method is Method.CURVATURE:
     print("[ Minimising curvature ]")
     run_time = trajectory.minimise_curvature()
+    print("[ Computing lap time ]")
+    trajectory.update_velocity()
+    lap_time = trajectory.lap_time()
 elif args.method is Method.COMPROMISE:
     print("[ Minimising optimal compromise ]")
     run_time = trajectory.minimise_optimal_compromise()
     print("  epsilon = {:.4f}".format(trajectory.epsilon))
+    print("[ Computing lap time ]")
+    trajectory.update_velocity()
+    lap_time = trajectory.lap_time()
 elif args.method is Method.DIRECT:
     print("[ Minimising lap time ]")
     run_time = trajectory.minimise_lap_time()
+    print("[ Computing lap time ]")
+    trajectory.update_velocity()
+    lap_time = trajectory.lap_time()
 elif args.method is Method.COMPROMISE_SECTORS:
     print("[ Optimising sectors ]")
     run_time = trajectory.optimise_sectors(K_MIN, PROXIMITY, LENGTH)
+    print("[ Computing lap time ]")
+    trajectory.update_velocity()
+    lap_time = trajectory.lap_time()
 elif args.method is Method.COMPROMISE_ESTIMATED:
     print("[ Minimising pre-computed compromise ]")
     mask = track.corners(trajectory.s, K_MIN, PROXIMITY, LENGTH)[1]
     epsilon = 0.406 * track.avg_curvature(trajectory.s[mask])
     print("  epsilon = {:.4f}".format(epsilon))
     run_time = trajectory.minimise_compromise(epsilon)
+    print("[ Computing lap time ]")
+    trajectory.update_velocity()
+    lap_time = trajectory.lap_time()
 elif args.method is Method.BAYES:
     print("[ BAYES  ]")
     run_time = trajectory.Bayesian()
+    print("[ Computing lap time ]")
+    lap_time = trajectory.calcMinTime(trajectory.best)
 else:
     raise ValueError("Did not recognise args.method {}".format(args.method))
-
-print("[ Computing lap time ]")
-trajectory.update_velocity()
-lap_time = trajectory.lap_time()
 
 print()
 print("=== Results ==========================================================")

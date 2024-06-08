@@ -29,7 +29,7 @@ class Track:
         self.mid_controls_decongested = [[], []]
         self.widths_decongested = []
         
-        for i in range(0, len(self.mid.controls[0]), 5):
+        for i in range(0, len(self.mid.controls[0]), 2):
             self.mid_controls_decongested[0].append(self.mid.controls[0][i])
             self.mid_controls_decongested[1].append(self.mid.controls[1][i])
             self.widths_decongested.append(self.widths[i])
