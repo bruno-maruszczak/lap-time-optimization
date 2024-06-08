@@ -15,6 +15,7 @@ from matplotlib import pyplot as plt
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
+from sklearn.preprocessing import StandardScaler
 
 from track import Track
 from vehicle import Vehicle
@@ -62,7 +63,6 @@ class Trajectory:
         """Calculate lap time from the velocity profile."""
         # print(self.s)
         time_sum = np.sum(np.diff(self.s) / self.velocity.v)
-        print(time_sum)
         return time_sum
     
     ##################################################
@@ -70,7 +70,6 @@ class Trajectory:
     def updateBayesian(self, waypoints):
         """Update control points and the resulting path."""
         
-        print(f"update Bayesian: ")
         self.path = Path(waypoints, self.track.closed)
         # Sample every metre
         self.s = np.linspace(0, self.path.length, self.ns)
@@ -86,14 +85,12 @@ class Trajectory:
         """Minimum time to traverse on a fixed trajectory for Bayesian optimisation."""
         # Method for Bayesian optimization
         
-        print("calcMinTime")
-        
         # Fit cubic splines on the waypoints
         # waypoints are values in between the cones
-        tck, u = splprep([waypoints[0], waypoints[1]], s = 3)
+        tck, u = splprep([waypoints[0], waypoints[1]], s = 1)
         
         # Re-sample waypoints with finer discretization
-        u_fine = np.linspace(0, 1, num=2*len(waypoints[0])) # in documentation, they starts with 21 (they advise <30) waypoints and do finer discretization with 100 waypoints
+        u_fine = np.linspace(0, 1, 120)#num=2*len(waypoints[0])) # in documentation, they starts with 21 (they advise <30) waypoints and do finer discretization with 100 waypoints
         x_fine, y_fine = splev(u_fine, tck)
         
         # for debugging
@@ -123,13 +120,16 @@ class Trajectory:
         
         # 2. Calculate the normal to the spline at this point
         dx, dy = splev(t_closest, spline, der=1)
-        normal = np.array([-dy, dx])
-        normal /= np.linalg.norm(normal)
-        
+        tangent = np.array([dx, dy])
+        tangent /= np.linalg.norm(tangent)
+
+        # Normal vector is perpendicular to the tangent vector
+        normal = np.array([-tangent[1], tangent[0]])
+
         # 3. Move the point (x, y) by the given distance in the normal direction
         new_x = x + distance * normal[0]
         new_y = y + distance * normal[1]
-        
+            
         return new_x, new_y
     
     def expected_improvement(self, x, gp, tau_best, n_params):
@@ -143,14 +143,22 @@ class Trajectory:
             self.sigma.append(sigma)
         return ei
 
-    def find_best_w(self, gp, tau_best, bounds, n_params):
+    def find_best_w(self, gp, tau_best, x0, bounds, n_params):
+        
+        # scaler = StandardScaler()
+        # x0 = np.array(x0)
+        # x0_scaled = scaler.fit_transform(x0.reshape(-1, 1)).flatten()
+        # # bounds_scaled = scaler.transform(bounds)
+        # bounds_scaled = np.zeros_like(bounds)
+        # for i in range(bounds.shape[0]):
+        #     bounds_scaled[i] = scaler.fit_transform(bounds[i].reshape(-1, 1)).flatten()
         
         def min_obj(X):
             return -(self.expected_improvement(X, gp, tau_best, n_params))
 
-        x0 = np.random.uniform(bounds[:, 0], bounds[:, 1])
-        res = minimize(min_obj, x0=x0, bounds=bounds, method='L-BFGS-B')
-        return res.x
+        # x0 = np.random.uniform(bounds[:, 0], bounds[:, 1])
+        res = minimize(min_obj, x0=x0, bounds=bounds, method='COBYLA',options={'maxiter': 1000, 'disp': True}) # methods: 'COBYLA' 'SLSQP' 'L-BFGS-B'
+        return res.x #scaler.inverse_transform(res.x.reshape(-1, 1)).flatten() #
 
     def Bayesian(self):
         """Racing line using Bayesian optimization."""
@@ -160,7 +168,8 @@ class Trajectory:
         
         x_mid = self.mid_controls_decongested[0] #self.mid_waipoints[0]
         y_mid = self.mid_controls_decongested[1] #self.mid_waipoints[1]
-        widths = self.widths_decongested #self.widths
+        widths = self.widths_decongested#[w/2 for w in self.widths_decongested] #self.widths
+        print(f"ilosc punktow do spline: {len(widths)} szerokości na trasie: {widths}")
         n = len(widths)
         
         # print(self.widths)
@@ -177,18 +186,18 @@ class Trajectory:
             # print(len(self.widths))
             for i in range (len(x_mid)):
                 # random distance to move track in the normal direction
-                distance = np.random.uniform(-0.99,0.99) * widths[i] / 2
+                distance = np.random.uniform(0,0.99) * widths[i] / 2
                 distance_w_list.append(distance)
                 
                 x_new, y_new = self.move_xy_by_distance(tck, x_mid[i], y_mid[i], distance)
                 new_x_list.append(x_new)
                 new_y_list.append(y_new)
                 
-            # plt.figure(); plt.scatter(x_mid, y_mid, label='Dane oryginalne')
-            # plt.scatter(new_x_list, new_y_list, label='po przesunieciu')
-            # plt.legend()
-            # # plt.show()
-            # plt.savefig(f'img/mid_after_decongested_{j}.png')
+            plt.figure(); plt.scatter(x_mid, y_mid, label='Dane oryginalne')
+            plt.scatter(new_x_list, new_y_list, label='po przesunieciu')
+            plt.legend()
+            # plt.show()
+            plt.savefig(f'img/mid_after_decongested_{j}.png')
             
             # Step 4: Compute min time to traverse using Algorithm 1
             lap_time = self.calcMinTime((new_x_list, new_y_list))
@@ -211,8 +220,11 @@ class Trajectory:
         while not converged:
             # Step 11: Determine candidate trajectory w*
             tau_best = np.min(y_train)
+            w_best = distances_w_list[np.argmin(y_train)]
+            
             bounds = np.array([[-w/2, w/2] for w in widths])
-            w_star = self.find_best_w(gp, tau_best, bounds, n)
+            w_star = self.find_best_w(gp, tau_best, w_best,bounds, n)
+            distances_w_list.append(w_star)
             
             
             # Step 12: Compute min time to traverse τ* using Algorithm 1
@@ -223,22 +235,28 @@ class Trajectory:
                 x_star_list.append(x_star); y_star_list.append(y_star)
             tau_star = self.calcMinTime((x_star_list, y_star_list))
             
+            print(f"tau best: {tau_best} tau star: {tau_star}")
+            
             # Step 13: Add new sample to training data
             D.append((w_star, tau_star))
             X_train = np.array([np.ravel(w) for w, _ in D])
             y_train = np.array([t for _, t in D])
             
+            
             # Step 14: Update the GP model using D
             gp.fit(X_train, y_train)
             
             # Check for convergence
-            if len(y_train) > 10 and np.std(self.sigma[-10:]) < 1e-3:
+            if len(y_train) > 30 and np.std(self.sigma[-10:]) < 1e-3:
                 converged = True
+                w_best = distances_w_list[np.argmin(y_train)]
+                print(f"czasy trajektorii: {y_train}")
                 
         x_star_list = []; y_star_list = []
         for i in range (len(x_mid)):
-            x_star, y_star = self.move_xy_by_distance(tck, x_mid[i], y_mid[i], w_star[i])
+            x_star, y_star = self.move_xy_by_distance(tck, x_mid[i], y_mid[i], w_best[i])
             x_star_list.append(x_star); y_star_list.append(y_star)
+            
             
         self.best = (x_star_list, y_star_list)
 
