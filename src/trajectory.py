@@ -9,6 +9,7 @@ from scipy.interpolate import splev, splprep
 from track import Track
 from utils import define_corners, idx_modulo
 from velocity import VelocityProfile
+from matplotlib import pyplot as plt
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
@@ -115,6 +116,30 @@ class Trajectory:
         # print(self.widths)
         # print(len(self.widths), len(self.mid_waipoints[0]))
         
+        new_x_list = []
+        new_y_list = []
+        x = self.mid_controls_decongested[0] #self.mid_waipoints[0]
+        y = self.mid_controls_decongested[1] #self.mid_waipoints[1]
+        widths = self.widths_decongested #self.widths
+        
+        #the bigger s, the more smooth spline is, 0 means spline goes through every point
+        tck, u = splprep([x, y], s=0)
+        # print(len((self.mid_waipoints[0])))
+        # print(len(self.widths))
+        for i in range (len(x)):
+            # random distance to move track in the normal direction
+            distance = np.random.uniform(-0.99,0.99) * widths[i] / 2
+            
+            x_new, y_new = self.move_xy_by_distance(tck, x[i], y[i], distance)
+            new_x_list.append(x_new)
+            new_y_list.append(y_new)
+        plt.scatter(x, y, label='Dane oryginalne')
+        plt.scatter(new_x_list, new_y_list, label='po przesunieciu')
+        plt.legend()
+        # plt.show()
+        plt.savefig('mid_points_and_after_moving_decongested.png')
+        
+        
         for _ in range(10):
             # Step 3: Randomly sample a new trajectory parametrized by waypoints
             waypoints = np.random.uniform(-0.99,0.99)#*self.widths[i]
@@ -122,7 +147,12 @@ class Trajectory:
             
             # Step 4: Compute min time to traverse using Algorithm 1
             lap_time = self.calcMinTime(self.mid_waipoints, self.length)
+            
             lap_times.append(lap_time)
+            
+           
+            
+            
         
         # Step 6: Initialize training data
         D = list(zip(waypoints_list, lap_times))
