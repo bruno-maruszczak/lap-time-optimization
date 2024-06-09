@@ -28,10 +28,13 @@ class Track:
         # Taking every 5th control point
         self.mid_controls_decongested = [[], []]
         self.widths_decongested = []
+        self.diffs_decongested = [[], []]
         
         for i in range(0, len(self.mid.controls[0]), 2):
             self.mid_controls_decongested[0].append(self.mid.controls[0][i])
             self.mid_controls_decongested[1].append(self.mid.controls[1][i])
+            self.diffs_decongested[0].append(self.diffs[0][i])
+            self.diffs_decongested[1].append(self.diffs[1][i])
             self.widths_decongested.append(self.widths[i])
         #########################################################
     
@@ -59,3 +62,10 @@ class Track:
             alphas = np.append(alphas, alphas[0])
         i = np.nonzero(alphas != -1)[0]
         return self.left[:, i] + (alphas[i] * self.diffs[:, i])
+    
+    def control_points_bayesian(self, alphas):
+        """Translate alpha values to control point coordinates."""
+        if self.closed:
+            alphas = np.append(alphas, alphas[0])
+        i = np.nonzero(alphas != -1)[0]
+        return self.left[:, i] + (alphas[i] * self.diffs_decongested[:, i])

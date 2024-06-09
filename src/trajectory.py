@@ -37,6 +37,7 @@ class Trajectory:
         self.velocity = None
         
         # for Bayesian
+        self.direction_vector = track.diffs
         self.length = track.length
         self.mid_waipoints = track.mid_controls
         self.widths = track.widths
@@ -106,31 +107,21 @@ class Trajectory:
         
         return self.lap_time()
     
-    def move_xy_by_distance(self, spline, x, y, distance):
+    def move_xy_by_distance(self, x, y, distances):
         """Get x y coordinates after moving wayponts in the direction normal to self.path_middle"""
-        # tck is already the spline representation (t, c, k)
-    
-        # 1. Find the closest point on the spline to (x, y)
-        def distance_to_point(t):
-            xt, yt = splev(t, spline)
-            return np.sqrt((xt - x) ** 2 + (yt - y) ** 2)
         
-        res = minimize_scalar(distance_to_point, bounds=(0, 1), method='bounded')
-        t_closest = res.x
+        new_x_a = []; new_y_a = []
         
-        # 2. Calculate the normal to the spline at this point
-        dx, dy = splev(t_closest, spline, der=1)
-        tangent = np.array([dx, dy])
-        tangent /= np.linalg.norm(tangent)
-
-        # Normal vector is perpendicular to the tangent vector
-        normal = np.array([-tangent[1], tangent[0]])
-
-        # 3. Move the point (x, y) by the given distance in the normal direction
-        new_x = x + distance * normal[0]
-        new_y = y + distance * normal[1]
+        for i, d in enumerate(distances):
+            new_x = x[i] + distances[i] * self.direction_vector[0][i]
+            new_y = y[i] + distances[i] * self.direction_vector[1][i]
             
-        return new_x, new_y
+            new_x_a.append(new_x); new_y_a.append(new_y)
+            
+            
+        # print(new_x_a, new_y_a)
+        return new_x_a, new_y_a
+        
     
     def expected_improvement(self, x, gp, tau_best, n_params):
         x = x.reshape(-1, n_params)
@@ -168,8 +159,8 @@ class Trajectory:
         
         x_mid = self.mid_controls_decongested[0] #self.mid_waipoints[0]
         y_mid = self.mid_controls_decongested[1] #self.mid_waipoints[1]
-        widths = self.widths_decongested#[w/2 for w in self.widths_decongested] #self.widths
-        print(f"ilosc punktow do spline: {len(widths)} szerokości na trasie: {widths}")
+        widths = [w/2 for w in self.widths_decongested] #self.widths
+        # print(f"ilosc punktow do spline: {len(widths)} szerokości na trasie: {widths}")
         n = len(widths)
         
         # print(self.widths)
@@ -180,24 +171,18 @@ class Trajectory:
             """Randomly sample a new trajectory parametrized by waypoints"""
             new_x_list = []; new_y_list = []
             distance_w_list = []
-            #the bigger s, the more smooth spline is, 0 means spline goes through every point
-            tck, u = splprep([x_mid, y_mid], s=0)
-            # print(len((self.mid_waipoints[0])))
-            # print(len(self.widths))
-            for i in range (len(x_mid)):
-                # random distance to move track in the normal direction
-                distance = np.random.uniform(0,0.99) * widths[i] / 2
-                distance_w_list.append(distance)
-                
-                x_new, y_new = self.move_xy_by_distance(tck, x_mid[i], y_mid[i], distance)
-                new_x_list.append(x_new)
-                new_y_list.append(y_new)
+                           
+            # random distance list to move track in the normal direction
+            distance_w_list = [np.random.uniform(-0.5,0.5) * widths[i]/2 for i in range(len(x_mid))]
+            
+            print("zew petla iteracja nr: ", j)    
+            new_x_list, new_y_list = self.move_xy_by_distance(x_mid, y_mid, distance_w_list)
+            
+            print(len(new_x_list), len(new_y_list))
                 
             plt.figure(); plt.scatter(x_mid, y_mid, label='Dane oryginalne')
             plt.scatter(new_x_list, new_y_list, label='po przesunieciu')
-            plt.legend()
-            # plt.show()
-            plt.savefig(f'img/mid_after_decongested_{j}.png')
+            plt.legend(); plt.savefig(f'img/mid_after_decongested_{j}.png')
             
             # Step 4: Compute min time to traverse using Algorithm 1
             lap_time = self.calcMinTime((new_x_list, new_y_list))
@@ -230,9 +215,7 @@ class Trajectory:
             # Step 12: Compute min time to traverse τ* using Algorithm 1
             # Also make sure we are in global x,y coordinates, not in widths coordinates
             x_star_list = []; y_star_list = []
-            for i in range (len(x_mid)):
-                x_star, y_star = self.move_xy_by_distance(tck, x_mid[i], y_mid[i], w_star[i])
-                x_star_list.append(x_star); y_star_list.append(y_star)
+            x_star_list, y_star_list = self.move_xy_by_distance(x_mid, y_mid, w_star)
             tau_star = self.calcMinTime((x_star_list, y_star_list))
             
             print(f"tau best: {tau_best} tau star: {tau_star}")
@@ -253,9 +236,7 @@ class Trajectory:
                 print(f"czasy trajektorii: {y_train}")
                 
         x_star_list = []; y_star_list = []
-        for i in range (len(x_mid)):
-            x_star, y_star = self.move_xy_by_distance(tck, x_mid[i], y_mid[i], w_best[i])
-            x_star_list.append(x_star); y_star_list.append(y_star)
+        x_star_list, y_star_list = self.move_xy_by_distance(x_mid, y_mid, w_best)
             
             
         self.best = (x_star_list, y_star_list)
