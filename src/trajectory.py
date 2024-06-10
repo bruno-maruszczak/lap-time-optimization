@@ -45,6 +45,7 @@ class Trajectory:
         self.widths_decongested = track.widths_decongested
         self.best = []
         self.sigma = []
+        # end for Bayesian
 
     def update(self, alphas):
         """Update control points and the resulting path."""
@@ -68,10 +69,20 @@ class Trajectory:
     
     ##################################################
     # for Bayesian optimisation
-    def updateBayesian(self, waypoints):
+    def updateAlphas(self, alphas):
+        path = Path(self.track.control_points_bayesian(alphas), self.track.closed)
+        
+        controls = path.controls
+        length = path.length
+        spline = path.spline
+        return controls
+   
+    
+    def calcMinTime(self, controls):
+        """Minimum time to traverse on a fixed trajectory for Bayesian optimisation."""
         """Update control points and the resulting path."""
         
-        self.path = Path(waypoints, self.track.closed)
+        self.path = Path(controls, self.track.closed)
         # Sample every metre
         self.s = np.linspace(0, self.path.length, self.ns)
         
@@ -80,29 +91,7 @@ class Trajectory:
         s_max = self.path.length if self.track.closed else None
         k = self.path.curvature(s)
         self.velocity = VelocityProfile(self.vehicle, s, k, s_max)
-    
-    
-    def calcMinTime(self, waypoints):
-        """Minimum time to traverse on a fixed trajectory for Bayesian optimisation."""
-        # Method for Bayesian optimization
-        
-        # Fit cubic splines on the waypoints
-        # waypoints are values in between the cones
-        tck, u = splprep([waypoints[0], waypoints[1]], s = 1)
-        
-        # Re-sample waypoints with finer discretization
-        u_fine = np.linspace(0, 1, 120)#num=2*len(waypoints[0])) # in documentation, they starts with 21 (they advise <30) waypoints and do finer discretization with 100 waypoints
-        x_fine, y_fine = splev(u_fine, tck)
-        
-        # for debugging
-        # plt.figure(); plt.scatter(waypoints[0], waypoints[1], label='Dane oryginalne')
-        # plt.scatter(x_fine, y_fine, label='po zdublowaniu')
-        # plt.legend()
-        # # plt.show()
-        # plt.savefig(f'img/points_multiplication.png')
-    
-        # Update the length of track and velocities
-        self.updateBayesian((x_fine, y_fine))
+
         # Step 4: Return minimum time to traverse on (x_fine, y_fine)
         
         return self.lap_time()
@@ -123,18 +112,25 @@ class Trajectory:
         return new_x_a, new_y_a
         
     
-    def expected_improvement(self, x, gp, tau_best, n_params):
+    def expected_improvement(self, x, gp : GaussianProcessRegressor, tau_best, n_params):
+        # true_tau = self.calcMinTime(self.updateAlphas(x))
         x = x.reshape(-1, n_params)
         tau_mean, sigma = gp.predict(x, return_std=True)
         with np.errstate(divide='warn'):
-            imp = tau_best - tau_mean
-            Z = imp / sigma
-            ei = imp * norm.cdf(Z) + sigma * norm.pdf(Z)
-            ei[sigma == 0.0] = 0.0
+            imp_est = tau_best - tau_mean[0]
+            # imp = tau_best - true_tau
+            # print(f"Estimated tau {tau_mean[0]} \t true tau {true_tau}")
+            # print(f"Estimated improvement {imp_est} \t true improvement {imp} \t improvement delta {imp_est - imp}")
+            sigma = sigma[0]
+            #Z = imp / sigma
+            #ei = imp * norm.cdf(Z) + sigma * norm.pdf(Z)
+            ei = max(0, imp_est)
+            if sigma == 0.0: ei = 0.0
+            #print(f"Expected improvement {ei} type {type(ei)}")
             self.sigma.append(sigma)
         return ei
 
-    def find_best_w(self, gp, tau_best, x0, bounds, n_params):
+    def find_best_alpha(self, gp, tau_best, x0, bounds, n_params):
         
         # scaler = StandardScaler()
         # x0 = np.array(x0)
@@ -147,21 +143,21 @@ class Trajectory:
         def min_obj(X):
             return -(self.expected_improvement(X, gp, tau_best, n_params))
 
-        # x0 = np.random.uniform(bounds[:, 0], bounds[:, 1])
-        res = minimize(min_obj, x0=x0, bounds=bounds, method='COBYLA',options={'maxiter': 1000, 'disp': True}) # methods: 'COBYLA' 'SLSQP' 'L-BFGS-B'
+        # x0 = [np.random.uniform(low=0, high=0.99) for _ in x0]
+        res = minimize(min_obj, x0=x0, bounds=bounds, method='COBYLA',options={'maxiter': 10000, 'disp': False}) # methods: 'COBYLA' 'SLSQP' 'L-BFGS-B'
         return res.x #scaler.inverse_transform(res.x.reshape(-1, 1)).flatten() #
 
     def Bayesian(self):
         """Racing line using Bayesian optimization."""
         # Initialization
-        distances_w_list = [] # distances used for learning gp model
+        alphas_list = [] # distances used for learning gp model
         lap_times = []
         
         x_mid = self.mid_controls_decongested[0] #self.mid_waipoints[0]
         y_mid = self.mid_controls_decongested[1] #self.mid_waipoints[1]
         widths = [w/2 for w in self.widths_decongested] #self.widths
         # print(f"ilosc punktow do spline: {len(widths)} szerokości na trasie: {widths}")
-        n = len(widths)
+        n = len(x_mid)-1
         
         # print(self.widths)
         # print(len(self.widths), len(self.mid_waipoints[0]))
@@ -173,12 +169,11 @@ class Trajectory:
             distance_w_list = []
                            
             # random distance list to move track in the normal direction
-            distance_w_list = [np.random.uniform(-0.5,0.5) * widths[i]/2 for i in range(len(x_mid))]
+            alphas = [np.random.uniform(0,0.99) for _ in range(len(x_mid)-1)]
             
             print("zew petla iteracja nr: ", j)    
-            new_x_list, new_y_list = self.move_xy_by_distance(x_mid, y_mid, distance_w_list)
             
-            print(len(new_x_list), len(new_y_list))
+            (new_x_list, new_y_list) = self.updateAlphas(alphas)
                 
             plt.figure(); plt.scatter(x_mid, y_mid, label='Dane oryginalne')
             plt.scatter(new_x_list, new_y_list, label='po przesunieciu')
@@ -187,16 +182,16 @@ class Trajectory:
             # Step 4: Compute min time to traverse using Algorithm 1
             lap_time = self.calcMinTime((new_x_list, new_y_list))
             lap_times.append(lap_time)
-            distances_w_list.append(distance_w_list)
+            alphas_list.append(alphas)
            
             
         # Step 6: Initialize training data
-        D = list(zip(distances_w_list, lap_times))
+        D = list(zip(alphas_list, lap_times))
         
         # Step 7: Learn a GP model τ ∼ GP(w)
-        X_train = np.array([np.ravel(w) for w in distances_w_list])
+        X_train = np.array([np.ravel(w) for w in alphas_list])
         y_train = np.array(lap_times)
-        kernel = Matern(nu=2.5)
+        kernel = Matern(nu=2.5) #TODO co to???
         gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=10)
         gp.fit(X_train, y_train)
         
@@ -205,17 +200,18 @@ class Trajectory:
         while not converged:
             # Step 11: Determine candidate trajectory w*
             tau_best = np.min(y_train)
-            w_best = distances_w_list[np.argmin(y_train)]
+            alpha_best = alphas_list[np.argmin(y_train)]
             
-            bounds = np.array([[-w/2, w/2] for w in widths])
-            w_star = self.find_best_w(gp, tau_best, w_best,bounds, n)
-            distances_w_list.append(w_star)
+            bounds = np.array([[0.0, 0.99] for _ in  alphas])
+            
+            w_star = self.find_best_alpha(gp, tau_best, alpha_best, bounds, n)
+            alphas_list.append(w_star)
             
             
             # Step 12: Compute min time to traverse τ* using Algorithm 1
             # Also make sure we are in global x,y coordinates, not in widths coordinates
             x_star_list = []; y_star_list = []
-            x_star_list, y_star_list = self.move_xy_by_distance(x_mid, y_mid, w_star)
+            x_star_list, y_star_list = self.updateAlphas(w_star)
             tau_star = self.calcMinTime((x_star_list, y_star_list))
             
             print(f"tau best: {tau_best} tau star: {tau_star}")
@@ -230,13 +226,15 @@ class Trajectory:
             gp.fit(X_train, y_train)
             
             # Check for convergence
-            if len(y_train) > 30 and np.std(self.sigma[-10:]) < 1e-3:
-                converged = True
-                w_best = distances_w_list[np.argmin(y_train)]
+            if len(y_train) > 1000 and np.std(self.sigma[-10:]) < 1e-3:
+                
+                alpha_best = alphas_list[np.argmin(y_train)]
                 print(f"czasy trajektorii: {y_train}")
                 
+                converged = True
+                
         x_star_list = []; y_star_list = []
-        x_star_list, y_star_list = self.move_xy_by_distance(x_mid, y_mid, w_best)
+        x_star_list, y_star_list = self.updateAlphas(alpha_best)
             
             
         self.best = (x_star_list, y_star_list)

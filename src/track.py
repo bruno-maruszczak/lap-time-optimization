@@ -27,15 +27,20 @@ class Track:
         self.mid_controls = self.mid.controls
         # Taking every 5th control point
         self.mid_controls_decongested = [[], []]
+        self.left_decongested = [[], []]
         self.widths_decongested = []
         self.diffs_decongested = [[], []]
         
-        for i in range(0, len(self.mid.controls[0]), 2):
+        for i in range(0, len(self.mid.controls[0]), 3):
             self.mid_controls_decongested[0].append(self.mid.controls[0][i])
             self.mid_controls_decongested[1].append(self.mid.controls[1][i])
             self.diffs_decongested[0].append(self.diffs[0][i])
             self.diffs_decongested[1].append(self.diffs[1][i])
+            self.left_decongested[0].append(self.left[0][i])
+            self.left_decongested[1].append(self.left[1][i])
             self.widths_decongested.append(self.widths[i])
+        self.diffs_decongested = np.array(self.diffs_decongested)
+        self.left_decongested = np.array(self.left_decongested)
         #########################################################
     
     def read_cones(self, path):
@@ -68,4 +73,4 @@ class Track:
         if self.closed:
             alphas = np.append(alphas, alphas[0])
         i = np.nonzero(alphas != -1)[0]
-        return self.left[:, i] + (alphas[i] * self.diffs_decongested[:, i])
+        return self.left_decongested[:, i] + (alphas[i] * self.diffs_decongested[:,i])
