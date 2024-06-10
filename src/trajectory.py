@@ -261,7 +261,7 @@ class Trajectory:
         x_star_list, y_star_list = self.updateAlphas(w_star)
         tau_star = self.calcMinTime((x_star_list, y_star_list))
 
-        print(f"Initial: {tau0} Opt*mized: {tau_star}")
+        print(f"Initial: {tau0} Optimized: {tau_star}")
         return (tau_star, w_star)
     
     
@@ -291,7 +291,7 @@ class Trajectory:
         taus = np.array(lap_times)
         results = list(zip(taus, alphas_list))
         
-        with Pool(processes=12) as p:
+        with Pool(processes=1) as p:
             args = sorted(results, key=lambda el: el[0])[0:10]
             rs = p.map(self.optimize_COBYLA, args)
             for res in rs:

@@ -1,12 +1,33 @@
 Based on [this repository](https://github.com/joedavison17/dissertation/)
 # lap-time-optimization
 
-## example of running program
+## Running the scripts
+To install the required dependencies run:
+```bash
+python3 -m venv ./venv
+source ./venv/bin/activate
+pip install -r ./requirements.txt
+```
+Plotting depends on TeX so you may be required to install appropriate packages on your system
+
+On NixOS you can use the development shell from this repository instead:
+```bash
+nix-shell # !!! Only use it on NixOS, this shell overrites $LD_LIBRARY_PATH which may break other systems
+```
+
+To run the optimisation run the `__main__.py` script in `src` directory. You can run the following to get information about script usage:
+```bash
+python src/__main__.py --help
+```
+Example usage:
+```
 python3 src/__main__.py --nonlinear --plot-all ./data/tracks/buckmore.json ./data/vehicles/tbr18.json
+```
+```
+python3 src/__main__.py --bayes --plot-all ./data/tracks/buckmore.json ./data/vehicles/tbr18.json
+```
 
-python3 src/__main__.py --bayes --plot-all data/tracks/buckmore.json data/vehicles/tbr18.json
-
-
+*\[PL\]*
 ## Założenia
 
 Założeniem projektu było wykonanie algorytmów optymalizujących prędkość przejazdu modelu po torze i porównanie ich wyników, t.j.
@@ -47,27 +68,6 @@ Oraz na plotach:
 ![laptime](./data/plots/buckmore/laptime/trajectory.png)
 ### Bayesian
 ![bayesian](./data/plots/buckmore/bayesian/trajectory.png)
-<!-- ![curvature](./data/plots/buckmore/nonlinear/trajectory.png) -->
+### Non-linear
+![nonlinear](./data/plots/buckmore/nonlinear/trajectory.png)
 
-
-
-Lap Time ma najdłuższy czas, ponieważ wyłącza się po paru iteracjach. 
-
-*for 10 iterations and single core
-
-
-
-
-
-
-
-
-## problemy:
-problemów może być parę. 
-- po pierwsze  dodatnie wolosowane wartości dla w_t nie są zawsze po jednej stronie toru. To może wprawadzać błędy w postaci nagłych skoków z jedne części na drugą. Jk zapewnić żeby byly po jednej stronie?
-- po drugie nie wiem czy jest to minimalizowane tak jak oni chcą w dokumentacji. Chat napisał funkcję, która minimalizuje teoretycznie, ale czy faktycznie robi to dobrze?
-- po trzecie trzeba zobaczyć czy podanie jako warunków początkowych do minimalizacji waypointów z najlepszym czasem nie poprawi wyników. -> done, nie wiem czy poprawiło XD
-
-
-
-  TODO: komentarze dopisac

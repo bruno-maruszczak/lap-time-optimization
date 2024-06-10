@@ -1,3 +1,7 @@
+#================IMPORTANT==================
+#  Don't use the shell on non NixOS systems
+#===========================================
+
 with import <nixpkgs> {};
 
 mkShell {
@@ -17,7 +21,8 @@ mkShell {
     zlib
   ];
 
-
+  # If you want to use the shell on distributions other than NixOS
+  # remove the line `export LD_LIBRARY_PATH=$NIX_LD_LIBRARY_PATH`
   shellHook = ''
     export LD_LIBRARY_PATH=$NIX_LD_LIBRARY_PATH
     if [ ! -d "./venv" ]; then
