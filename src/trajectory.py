@@ -112,6 +112,7 @@ class Trajectory:
         # print(new_x_a, new_y_a)
         return new_x_a, new_y_a
 
+
     def expected_improvement(self, x, gp : GaussianProcessRegressor, tau_best, n_params):
         true_tau = self.calcMinTime(self.updateAlphas(x))
         x = x.reshape(-1, n_params)

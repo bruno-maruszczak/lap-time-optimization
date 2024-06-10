@@ -2,6 +2,7 @@ import argparse
 import os
 import numpy as np
 from enum import IntEnum, unique
+import numpy as np
 from plot import plot_corners, plot_path, plot_trajectory
 from track import Track
 from trajectory import Trajectory
