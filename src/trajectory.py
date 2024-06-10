@@ -113,18 +113,18 @@ class Trajectory:
         
     
     def expected_improvement(self, x, gp : GaussianProcessRegressor, tau_best, n_params):
-        # true_tau = self.calcMinTime(self.updateAlphas(x))
+        true_tau = self.calcMinTime(self.updateAlphas(x))
         x = x.reshape(-1, n_params)
         tau_mean, sigma = gp.predict(x, return_std=True)
         with np.errstate(divide='warn'):
             imp_est = tau_best - tau_mean[0]
-            # imp = tau_best - true_tau
+            imp = tau_best - true_tau
             # print(f"Estimated tau {tau_mean[0]} \t true tau {true_tau}")
             # print(f"Estimated improvement {imp_est} \t true improvement {imp} \t improvement delta {imp_est - imp}")
             sigma = sigma[0]
             #Z = imp / sigma
             #ei = imp * norm.cdf(Z) + sigma * norm.pdf(Z)
-            ei = max(0, imp_est)
+            ei = max(0, imp)
             if sigma == 0.0: ei = 0.0
             #print(f"Expected improvement {ei} type {type(ei)}")
             self.sigma.append(sigma)
@@ -175,9 +175,9 @@ class Trajectory:
             
             (new_x_list, new_y_list) = self.updateAlphas(alphas)
                 
-            plt.figure(); plt.scatter(x_mid, y_mid, label='Dane oryginalne')
-            plt.scatter(new_x_list, new_y_list, label='po przesunieciu')
-            plt.legend(); plt.savefig(f'img/mid_after_decongested_{j}.png')
+            # plt.figure(); plt.scatter(x_mid, y_mid, label='Dane oryginalne')
+            # plt.scatter(new_x_list, new_y_list, label='po przesunieciu')
+            # plt.legend(); plt.savefig(f'img/mid_after_decongested_{j}.png')
             
             # Step 4: Compute min time to traverse using Algorithm 1
             lap_time = self.calcMinTime((new_x_list, new_y_list))
@@ -226,7 +226,7 @@ class Trajectory:
             gp.fit(X_train, y_train)
             
             # Check for convergence
-            if len(y_train) > 1000 and np.std(self.sigma[-10:]) < 1e-3:
+            if len(y_train) > 40 and np.std(self.sigma[-10:]) < 1e-3:
                 
                 alpha_best = alphas_list[np.argmin(y_train)]
                 print(f"czasy trajektorii: {y_train}")

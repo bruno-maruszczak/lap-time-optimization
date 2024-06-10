@@ -7,6 +7,24 @@ python3 src/__main__.py --curvature --plot-all ./data/tracks/buckmore.json ./dat
 python3 src/__main__.py --bayes --plot-all data/tracks/buckmore.json data/vehicles/tbr18.json
 
 
+# Założenia
+
+Założeniem projektu było wykonanie algorytmów aptymalizujących 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## problemy:
 problemów może być parę. 
 - po pierwsze  dodatnie wolosowane wartości dla w_t nie są zawsze po jednej stronie toru. To może wprawadzać błędy w postaci nagłych skoków z jedne części na drugą. Jk zapewnić żeby byly po jednej stronie?
