@@ -1,5 +1,6 @@
 import argparse
 import os
+import numpy as np
 from enum import IntEnum, unique
 from plot import plot_corners, plot_path, plot_trajectory
 from track import Track
@@ -18,6 +19,7 @@ class Method(IntEnum):
     COMPROMISE_SECTORS = 3
     COMPROMISE_ESTIMATED = 4
     BAYES = 5
+    NONLINEAR = 6
 
 
 parser = argparse.ArgumentParser(description='Racing line optimisation')
@@ -42,6 +44,10 @@ methods.add_argument('--compromise',
 methods.add_argument('--bayes',
                      action='store_const', dest='method', const=Method.BAYES,
                      help='minimise time via bayesian optimisation'
+                     )
+methods.add_argument('--nonlinear',
+                     action='store_const', dest='method', const=Method.NONLINEAR,
+                     help='minimise time via nonlinear optimisation'
                      )
 methods.add_argument('--laptime',
                      action='store_const', dest='method', const=Method.DIRECT,
@@ -128,20 +134,32 @@ elif args.method is Method.BAYES:
     run_time = trajectory.Bayesian()
     print("[ Computing lap time ]")
     lap_time = trajectory.calcMinTime(trajectory.best)
+elif args.method is Method.NONLINEAR:
+    print("[ NONLINEAR ]")
+    run_time = trajectory.Nonlinear()
+    print("[ Computing lap time ]")
+    lap_time = trajectory.calcMinTime(trajectory.best)
 else:
     raise ValueError("Did not recognise args.method {}".format(args.method))
+
+length = trajectory.path.length # dlugosc sciezki
+mean_velocity = np.mean(trajectory.velocity.v)
+max_velocity = np.max(trajectory.velocity.v)
 
 print()
 print("=== Results ==========================================================")
 print("Lap time = {:.3f}".format(lap_time))
 print("Run time = {:.3f}".format(run_time))
+print("Path Length = {:.3f}".format(length))
+print("Max velocity = {:.3f}".format(max_velocity))
+print("Mean velocity = {:.3f}".format(mean_velocity))
 print("======================================================================")
 print()
 
 ###############################################################################
 # Plotting
 
-method_dirs = ['curvature', 'compromise', 'laptime', 'sectors', 'estimated', 'bayesian']
+method_dirs = ['curvature', 'compromise', 'laptime', 'sectors', 'estimated', 'bayesian', 'nonlinear']
 plot_dir = os.path.join(
     os.path.dirname(__file__), '..', 'data', 'plots', track.name,
     method_dirs[args.method]

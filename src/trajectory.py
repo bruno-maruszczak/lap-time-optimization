@@ -2,6 +2,7 @@ import math
 import numpy as np
 import os
 import time
+from multiprocessing import Pool
 from functools import partial
 from multiprocessing import Pool
 from scipy.optimize import Bounds, minimize, minimize_scalar
@@ -110,8 +111,7 @@ class Trajectory:
             
         # print(new_x_a, new_y_a)
         return new_x_a, new_y_a
-        
-    
+
     def expected_improvement(self, x, gp : GaussianProcessRegressor, tau_best, n_params):
         true_tau = self.calcMinTime(self.updateAlphas(x))
         x = x.reshape(-1, n_params)
@@ -226,7 +226,7 @@ class Trajectory:
             gp.fit(X_train, y_train)
             
             # Check for convergence
-            if len(y_train) > 40 and np.std(self.sigma[-10:]) < 1e-3:
+            if len(y_train) > 20 and np.std(self.sigma[-10:]) < 1e-3:
                 
                 alpha_best = alphas_list[np.argmin(y_train)]
                 print(f"czasy trajektorii: {y_train}")
@@ -237,6 +237,72 @@ class Trajectory:
         x_star_list, y_star_list = self.updateAlphas(alpha_best)
             
             
+        self.best = (x_star_list, y_star_list)
+
+        return time.time() - t0
+    
+    def optimize_COBYLA(self, args):
+        tau0, alpha0 = args
+        bounds = np.array([[0.0, 0.99] for _ in  alpha0])
+        
+        def expected_improvement(x):
+            tau = self.calcMinTime(self.updateAlphas(x))
+            with np.errstate(divide='warn'):
+                imp = tau0 - tau
+                ei = max(0, imp)
+            return -ei
+        
+        # methods: 'COBYLA' 'SLSQP' 'L-BFGS-B'
+        res = minimize(expected_improvement, x0=alpha0, bounds=bounds, method='COBYLA',options={'maxiter': 2000, 'disp': False})
+        
+        w_star = res.x
+        x_star_list = []; y_star_list = []
+        x_star_list, y_star_list = self.updateAlphas(w_star)
+        tau_star = self.calcMinTime((x_star_list, y_star_list))
+
+        print(f"Initial: {tau0} Opt*mized: {tau_star}")
+        return (tau_star, w_star)
+    
+    
+    def Nonlinear(self):
+        """Racing line using Bayesian optimization."""
+        # Initialization
+        alphas_list = [] # distances used for learning gp model
+        lap_times = []
+        
+        x_mid = self.mid_controls_decongested[0] #self.mid_waipoints[0]
+        
+        t0 = time.time()
+        for j in range(100):
+            """Randomly sample a new trajectory parametrized by waypoints"""
+            new_x_list = []; new_y_list = []
+                           
+            # random distance list to move track in the normal direction
+            alphas = [np.random.uniform(0,0.99) for _ in range(len(x_mid)-1)]
+                  
+            (new_x_list, new_y_list) = self.updateAlphas(alphas)
+                
+            lap_time = self.calcMinTime((new_x_list, new_y_list))
+            lap_times.append(lap_time)
+            alphas_list.append(alphas)
+           
+
+        taus = np.array(lap_times)
+        results = list(zip(taus, alphas_list))
+        
+        with Pool(processes=12) as p:
+            args = sorted(results, key=lambda el: el[0])[0:10]
+            rs = p.map(self.optimize_COBYLA, args)
+            for res in rs:
+                results.append(res)
+        
+        tau_best, alpha_best = sorted(results, key=lambda el: el[0])[0]
+            
+            
+        x_star_list = []; y_star_list = []
+        x_star_list, y_star_list = self.updateAlphas(alpha_best)
+            
+        print(f"Best is {tau_best}")
         self.best = (x_star_list, y_star_list)
 
         return time.time() - t0
