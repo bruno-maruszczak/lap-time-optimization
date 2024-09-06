@@ -1,0 +1,4 @@
+https://www.do-mpc.com/en/latest/
+https://underactuated.csail.mit.edu/trajopt.html
+https://jonathan-hui.medium.com/rl-lqr-ilqr-linear-quadratic-regulator-a5de5104c750
+https://pypi.org/project/pytorch-mppi/0.4.2/
