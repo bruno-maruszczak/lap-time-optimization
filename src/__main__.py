@@ -32,6 +32,11 @@ parser.add_argument('vehicle',
                     nargs=1, type=str,
                     help='path to JSON containing vehicle data'
                     )
+parser.add_argument('track_width',
+                    nargs=1, type=float, 
+                    help='float value from 0.01 to 1.0 representing percentage of the track that can be used, \
+                        0.99 means that the whole track can be used, 0.0 means that the track is very narrow'
+                    )
 methods = parser.add_argument_group(
     'generation methods').add_mutually_exclusive_group(required=True)
 methods.add_argument('--curvature',
@@ -87,7 +92,8 @@ args = parser.parse_args()
 ###############################################################################
 # Generation
 
-track = Track(args.track[0])
+track_width = args.track_width[0]
+track = Track(args.track[0], track_width=track_width)
 vehicle = Vehicle(args.vehicle[0])
 trajectory = Trajectory(track, vehicle)
 
@@ -171,14 +177,14 @@ if not os.path.exists(plot_dir):
 if args.plot_corners or args.plot_all:
     plot_corners(
         os.path.join(plot_dir, "corners." + args.ext),
-        track.left, track.right, track.mid.position(trajectory.s),
+        track.old_left, track.old_right, track.mid.position(trajectory.s),
         track.corners(trajectory.s, K_MIN, PROXIMITY, LENGTH)[1]
     )
 
 if args.plot_path or args.plot_all:
     plot_path(
         os.path.join(plot_dir, "path." + args.ext),
-        track.left, track.right, trajectory.path.position(trajectory.s),
+        track.old_left, track.old_right, trajectory.path.position(trajectory.s),
         trajectory.path.controls
     )
 
@@ -186,7 +192,7 @@ if args.plot_trajectory or args.plot_all:
 
     plot_trajectory(
         os.path.join(plot_dir, "trajectory." + args.ext),
-        track.left, track.right, trajectory.path.position(trajectory.s),
+        track.old_left, track.old_right, trajectory.path.position(trajectory.s),
         trajectory.velocity.v
     )
 print(f" track size: {track.size}")

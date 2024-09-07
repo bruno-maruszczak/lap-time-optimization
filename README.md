@@ -8,6 +8,7 @@ python3 -m venv ./venv
 source ./venv/bin/activate
 pip install -r ./requirements.txt
 ```
+
 Plotting depends on TeX so you may be required to install appropriate packages on your system
 
 On NixOS you can use the development shell from this repository instead:

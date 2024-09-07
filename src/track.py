@@ -2,17 +2,23 @@ import json
 import numpy as np
 from path import Path
 from utils import define_corners, idx_modulo, is_closed
+import matplotlib.pyplot as plt
 
 
 class Track:
     """Represents a track with boundaries defined by a series of cones."""
 
-    def __init__(self, json_path=None, left=None, right=None):
+    def __init__(self, json_path=None, left=None, right=None, track_width=None):
         """Create track from cone coordinates."""
         if json_path is None:
             self.left = left
             self.right = right
         else:
+            if track_width > 1.0:
+                track_width = 1.0
+            elif track_width < 0.001:
+                track_width = 0.001
+            self.track_width = 1.0 - track_width
             self.read_cones(json_path)
         self.closed = is_closed(self.left, self.right)
         self.size = self.left[0].size - int(self.closed)
@@ -50,6 +56,18 @@ class Track:
         self.left = np.array([track_data["left"]["x"], track_data["left"]["y"]])
         self.right = np.array([track_data["right"]["x"], track_data["right"]["y"]])
         print("[ Imported {} ]".format(self.name))
+        self.new_left = self.new_left_cones(self.left, self.right, self.track_width)
+        self.new_right = self.new_right_cones(self.left, self.right, self.track_width)
+        # plt.figure()
+        # plt.scatter(self.left[0], self.left[1], c='r')
+        # plt.scatter(self.right[0], self.right[1], c='g')
+        # plt.scatter(self.new_left[0], self.new_left[1], c='b')
+        # plt.scatter(self.new_right[0], self.new_right[1], c='y')
+        # plt.savefig('plot.png')
+        self.old_left = self.left
+        self.old_right = self.right
+        self.left = self.new_left
+        self.right = self.new_right
     
 
     def avg_curvature(self, s):
@@ -74,3 +92,28 @@ class Track:
             alphas = np.append(alphas, alphas[0])
         i = np.nonzero(alphas != -1)[0]
         return self.left_decongested[:, i] + (alphas[i] * self.diffs_decongested[:,i])
+    
+     # TODO: put that method inside read_cones
+    def new_left_cones(self, old_left, old_right, track_width):
+        """Return new left cones based on old left cones and track width parameter."""
+        new_left = np.zeros((2, old_left[0].size))
+        for i in range(old_left[0].size):
+            left = old_left[:, i]
+            right = old_right[:, i]
+            diff = right - left
+            # norm = np.sqrt(diff[0]**2 + diff[1]**2)
+            new_diff = track_width * diff / 2
+            new_left[:, i] = left + new_diff
+        return new_left
+    
+    def new_right_cones(self, old_left, old_right, track_width):
+        """Return new right cones based on old right cones and track width parameter."""
+        new_right = np.zeros((2, old_right[0].size))
+        for i in range(old_right[0].size):
+            left = old_left[:, i]
+            right = old_right[:, i]
+            diff = left - right
+            # norm = np.sqrt(diff[0]**2 + diff[1]**2)
+            new_diff = track_width * diff / 2
+            new_right[:, i] = right + new_diff
+        return new_right
