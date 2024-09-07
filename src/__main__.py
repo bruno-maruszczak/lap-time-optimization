@@ -7,6 +7,7 @@ from plot import plot_corners, plot_path, plot_trajectory
 from track import Track
 from trajectory import Trajectory
 from vehicle import Vehicle
+from utils import save_path_to_json
 
 ###############################################################################
 # Argument parsing
@@ -187,6 +188,7 @@ if args.plot_path or args.plot_all:
         track.old_left, track.old_right, trajectory.path.position(trajectory.s),
         trajectory.path.controls
     )
+    save_path_to_json(plot_dir, trajectory.path.position(trajectory.s)[0], trajectory.path.position(trajectory.s)[1], f"path_{track.name}")
 
 if args.plot_trajectory or args.plot_all:
 
@@ -195,5 +197,7 @@ if args.plot_trajectory or args.plot_all:
         track.old_left, track.old_right, trajectory.path.position(trajectory.s),
         trajectory.velocity.v
     )
+
+
 print(f" track size: {track.size}")
 print(f"widths: {len(track.widths)}")

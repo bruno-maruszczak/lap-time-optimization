@@ -1,4 +1,5 @@
 import numpy as np
+import json
 
 
 def idx_modulo(a, b, n):
@@ -102,3 +103,17 @@ def samples_to_controls(s_dist, s_idx, c_dist):
             j += 1
         c_flat[i] = j
     return c_flat.reshape(s_idx.shape)
+
+
+def save_path_to_json(path, x, y, name):
+    """saving path to json file"""
+    data = {
+        "name": name, 
+        "path": { 
+            "x": x.tolist(), 
+            "y": y.tolist()
+        }
+    }
+    with open(f"{path}\{name}.json", "w") as f:
+        json.dump(data, f, indent=4)
+
