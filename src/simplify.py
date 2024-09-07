@@ -27,15 +27,15 @@ parser.add_argument('vehicle',
 
 methods = parser.add_argument_group('spline').add_mutually_exclusive_group(required=True)
 methods.add_argument('--poly',
-  action='store_const', dest='spline', const=Method.POLY,
+  action='store_const', dest='spline', const=SplineType.POLY,
   help='Polynomial B-Spline interpolation'
 )
 methods.add_argument('--trig',
-  action='store_const', dest='spline', const=Method.TRIG,
+  action='store_const', dest='spline', const=SplineType.TRIG,
   help='Trigonometric spline interpolation'
 )
 methods.add_argument('--hyp',
-  action='store_const', dest='spline', const=Method.HYP,
+  action='store_const', dest='spline', const=SplineType.HYP,
   help='Hyperbolic spline interpolation'
 )
 

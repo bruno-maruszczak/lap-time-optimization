@@ -454,8 +454,8 @@ def optimise_sector_compromise(i, corners, traj):
     alphas[idxs] = sector.alphas * weights
 
     # Report and plot sector results
-    print("  Sector {:d}: eps={:.4f}, run time={:.2f}s".format(
-        i, sector.epsilon, rt
+    print("  Sector {:d}: eps={:.4f}".format(
+        i, sector.epsilon
     ))
     # plot_path(
     #   "./plots/" + traj.track.name + "_sector" + str(i) + ".png",
