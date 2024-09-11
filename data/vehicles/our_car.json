@@ -19,7 +19,9 @@
         "B_r": 12.0,
         "C_r": 1.2,
         "D_r": 0.9
-    }
+    },
+    "T": 1, // Torque [-1; 1]
+    "C_m": 0.1 // Motor drag coefficient
 
     //This is how it should look like: dont know why they used some simplified version of tire model, couldnt find the exact parameters
     // in documents/tires directory there are some papers about tire models
