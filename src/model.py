@@ -1,6 +1,7 @@
 import numpy as np
 import do_mpc
 from path import Path as Spline
+import json
 
 class VehicleModel:
     def __init__(self, track_line: Spline):
@@ -21,19 +22,22 @@ class VehicleModel:
         self.model = self.create_model()
 
     def load_params(self, path):
-        self.mass = 1.0
-        self.rotational_inertia = 1.0
-        self.length_f = 1.0
-        self.A_f = 1.0
-        self.B_f = 1.0
-        self.C_f = 1.0
-        self.length_r = 1.0
-        self.A_r = 1.0
-        self.B_r = 1.0
-        self.C_r = 1.0
-        self.Cr_0 = 0.0
-        self.Cr_2 = 0.0
-        self.ptv = 0.0
+        """Load vehicle data from JSON file."""
+        data = json.load(open(path))
+        self.rotational_inertia = data["rotational_inertia"]
+        self.name = data["name"]
+        self.mass = data["mass"]
+        self.length_f = data["length_f"]
+        self.A_f = data["frontTire"]["A_f"]
+        self.B_f = data["frontTire"]["B_f"]
+        self.C_f = data["frontTire"]["C_f"]
+        self.length_r = data["length_r"]
+        self.A_r = data["rearTire"]["A_r"]
+        self.B_r = data["rearTire"]["B_r"]
+        self.C_r = data["rearTire"]["C_r"]
+        self.Cr_0 = data["Cr_0"]
+        self.Cr_2 = data["Cr_2"]
+        self.ptv = data["ptv"]
 
 
     def k(self, s):

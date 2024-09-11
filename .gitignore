@@ -1,5 +1,6 @@
 /venv
 /.venv
+lap_time_venv
 /src/__pycache__
 /out
 /img
