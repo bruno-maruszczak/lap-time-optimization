@@ -1,12 +1,12 @@
 {
     "name": "our_car",
-    "mass": 500.0, // kg
-    "length_f": 2.0,
-    "length_r": 2.0,
-    "rotational_inertia": 1.0, // how to get those values?
-    "Cr_0": 0.0, //???
-    "Cr_2": 0.0, //???
-    "ptv": 0.0,  //???
+    "mass": 1000.0, // kg
+    "length_f": 2.0,  // Distance from the front axle to the center of gravity
+    "length_r": 2.0,  // Distance from the rear axle to the center of gravity
+    "rotational_inertia": 2000.0, //kg*m^2 // how to get those values?
+    "Cr_0": 0.01, // Constant rolling resistance coefficient//???
+    "Cr_2": 0.0003, // Speed-dependent rolling resistance coefficient//???
+    "ptv": 0.5,  // Torque vectoring parameter//???
     // Pacejka parameters, not dependant on the vehicle, 
     // rather on the tires
     // example values from Czarek
