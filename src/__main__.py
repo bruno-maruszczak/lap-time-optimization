@@ -8,6 +8,7 @@ from track import Track
 from trajectory import Trajectory
 from trajectory_bayesian_nonlinear import TrajectoryBayesianNonlinear
 from vehicle import Vehicle
+from vehicleMX5 import VehicleMX5
 from utils import save_path_to_json
 
 ###############################################################################
@@ -96,7 +97,10 @@ args = parser.parse_args()
 
 track_width = args.track_width[0]
 track = Track(args.track[0], track_width=track_width)
-vehicle = Vehicle(args.vehicle[0])
+if args.vehicle[0] == "./data/vehicles/MX5.json":
+    vehicle = VehicleMX5(args.vehicle[0])
+else:
+    vehicle = Vehicle(args.vehicle[0])
 if args.method is Method.BAYES or args.method is Method.NONLINEAR:
     trajectory = TrajectoryBayesianNonlinear(track, vehicle)
 else:

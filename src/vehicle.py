@@ -15,7 +15,7 @@ class Vehicle:
         vehicle_data = json.load(open(path))
         self.name = vehicle_data["name"]
         self.mass = vehicle_data["mass"]
-        self.cof = vehicle_data["frictionCoefficient"]
+        self.friction_coef = vehicle_data["frictionCoefficient"]
         self.engine_profile = [
             vehicle_data["engineMap"]["v"],
             vehicle_data["engineMap"]["f"]
@@ -28,7 +28,7 @@ class Vehicle:
 
     def traction(self, velocity, curvature):
         """Determine remaining traction when negotiating a corner."""
-        f = self.cof * self.mass * GRAV
+        f = self.friction_coef * self.mass * GRAV
         f_lat = self.mass * velocity**2 * curvature
         if f <= f_lat:
             return 0
