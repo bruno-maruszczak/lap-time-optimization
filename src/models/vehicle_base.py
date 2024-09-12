@@ -6,8 +6,8 @@ class VehicleBase:
     def __init__(self):
         pass
 
-    def lead_params(self, filepath):
+    def load_params(self, filepath):
         pass
 
-    def get_velocity_profile(self, path: Path, samples):
+    def get_velocity_profile(self, path: Path, samples, is_closed):
         pass
