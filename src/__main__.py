@@ -96,7 +96,11 @@ args = parser.parse_args()
 
 track_width = args.track_width[0]
 track = Track(args.track[0], track_width=track_width)
-vehicle = Vehicle(args.vehicle[0])
+print(f"vehicle: {args.vehicle[0]}")
+if args.vehicle[0] == "./data/vehicles/experiment.json":
+    vehicle = Vehicle2(args.vehicle[0])
+else:
+    vehicle = Vehicle(args.vehicle[0])
 if args.method is Method.BAYES or args.method is Method.NONLINEAR:
     trajectory = TrajectoryBayesianNonlinear(track, vehicle)
 else:
