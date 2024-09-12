@@ -40,9 +40,9 @@ class SimpleGasolineVehicle(VehicleBase):
             return 0
         return sqrt(f**2 - f_lat**2)
 
-    def get_velocity_profile(self, path, samples, is_closed):
+    def get_velocity_profile(self, path, samples):
         s_in = samples
-        s_max = path.length if is_closed else None
+        s_max = path.length if path.closed else None
         k_in = path.find_curvature_at_s(s_in)
 
         # self.limit_local_velocities(k)

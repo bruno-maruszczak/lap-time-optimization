@@ -9,5 +9,5 @@ class VehicleBase:
     def load_params(self, filepath):
         pass
 
-    def get_velocity_profile(self, path: Path, samples, is_closed):
+    def get_velocity_profile(self, path: Path, samples):
         pass
