@@ -44,5 +44,8 @@ class RacelineOptimizer:
         self.s = np.linspace(0, self.path.length, self.ns)
         self.velocity = self.vehicle.get_velocity_profile(self.path, self.s)
 
-    def optimize(self) -> float:
+    def lap_time(self) -> float:
+        np.sum(np.diff(self.s) / self.velocity)
+
+    def solve(self) -> float:
         pass

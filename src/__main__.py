@@ -5,8 +5,8 @@ from enum import IntEnum, unique
 import numpy as np
 from plot import plot_corners, plot_path, plot_trajectory
 from track import Track
-from optimizers.raceline_optimizer_base import TrajectoryOptimizer
 from optimizers.trajectory_bayesian_nonlinear import TrajectoryBayesianNonlinear
+import optimizers
 from models.simple_gasoline_vehicle import Vehicle
 from utils import save_path_to_json
 
@@ -109,38 +109,38 @@ LENGTH = 10
 
 if args.method is Method.CURVATURE:
     print("[ Minimising curvature ]")
-    run_time = trajectory.minimise_curvature()
+    optimizer = optimizers.CurvatureMinimizationOptimizer(track, vehicle)
+    run_time = optimizer.solve()
     print("[ Computing lap time ]")
-    trajectory.update_velocity()
-    lap_time = trajectory.lap_time()
+    lap_time = optimizer.lap_time()
 elif args.method is Method.COMPROMISE:
     print("[ Minimising optimal compromise ]")
-    run_time = trajectory.minimise_optimal_compromise()
-    print("  epsilon = {:.4f}".format(trajectory.epsilon))
+    optimizer = optimizers.AdaptiveCompromiseOptimizer(track, vehicle)
+    run_time = optimizer.solve()
+    print("  epsilon = {:.4f}".format(optimizer.epsilon))
     print("[ Computing lap time ]")
-    trajectory.update_velocity()
-    lap_time = trajectory.lap_time()
+    lap_time = optimizer.lap_time()
 elif args.method is Method.DIRECT:
     print("[ Minimising lap time ]")
-    run_time = trajectory.minimise_lap_time()
+    optimizer = optimizers.DirectLaptimeMinimizationOptimizer(track, vehicle)
+    run_time = optimizer.solve()
     print("[ Computing lap time ]")
-    trajectory.update_velocity()
-    lap_time = trajectory.lap_time()
+    lap_time = optimizer.lap_time()
 elif args.method is Method.COMPROMISE_SECTORS:
     print("[ Optimising sectors ]")
-    run_time = trajectory.optimise_sectors(K_MIN, PROXIMITY, LENGTH)
+    optimizer = optimizers.SectorOptimizer(track, vehicle, K_MIN, PROXIMITY, LENGTH)
+    run_time = optimizer.solve()
     print("[ Computing lap time ]")
-    trajectory.update_velocity()
-    lap_time = trajectory.lap_time()
+    lap_time = optimizer.lap_time()
 elif args.method is Method.COMPROMISE_ESTIMATED:
     print("[ Minimising pre-computed compromise ]")
     mask = track.corners(trajectory.s, K_MIN, PROXIMITY, LENGTH)[1]
     epsilon = 0.406 * track.avg_curvature(trajectory.s[mask])
     print("  epsilon = {:.4f}".format(epsilon))
-    run_time = trajectory.minimise_compromise(epsilon)
+    optimizer = optimizers.CurvatureAndLengthCompromiseOptimizer(track, vehicle, epsilon)
+    run_time = optimizer.solve()
     print("[ Computing lap time ]")
-    trajectory.update_velocity()
-    lap_time = trajectory.lap_time()
+    lap_time = optimizer.lap_time()
 elif args.method is Method.BAYES:
     print("[ BAYES  ]")
     run_time = trajectory.Bayesian()

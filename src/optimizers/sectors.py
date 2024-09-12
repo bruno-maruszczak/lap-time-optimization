@@ -13,15 +13,18 @@ from utils import define_corners, idx_modulo
 from raceline_optimizer_base import RacelineOptimizer
 from adaptive_compromise import AdaptiveCompromiseOptimizer
 
-class DirectLaptimeMinimizationOptimizer(RacelineOptimizer):
+class SectorOptimizer(RacelineOptimizer):
     
-    def __init__(self, track: Track, vehicle: VehicleBase):
+    def __init__(self, track: Track, vehicle: VehicleBase, k_min, proximity, length):
         super().__init__(track, vehicle)
         self.ns = math.ceil(track.length)
         self.update_raceline_control_points(np.full(track.size, 0.5))
+        self.k_min = k_min
+        self.proximity = proximity
+        self.length = length
 
 
-    def optimise_sectors(self, k_min, proximity, length):
+    def optimize(self):
         """
         Generate a path that optimises the path through each sector, and merges
         the results along intervening straights.
@@ -29,7 +32,7 @@ class DirectLaptimeMinimizationOptimizer(RacelineOptimizer):
 
         # Define sectors
         t0 = time.time()
-        corners, _ = self.track.corners(self.s, k_min, proximity, length)
+        corners, _ = self.track.corners(self.s, self.k_min, self.proximity, self.length)
 
         # Optimise path for each sector in parallel
         nc = corners.shape[0]
@@ -65,7 +68,7 @@ def optimise_sector_compromise(i, corners, traj: RacelineOptimizer):
     )
 
     # Optimise path through sector
-    sector.optimize()
+    sector.solve()
 
     # Weight alphas for merging across straights
     weights = np.ones((d-a) % n)

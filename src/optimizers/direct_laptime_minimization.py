@@ -14,7 +14,7 @@ class DirectLaptimeMinimizationOptimizer(RacelineOptimizer):
         self.ns = math.ceil(track.length)
         self.update_raceline_control_points(np.full(track.size, 0.5))
 
-    def optimize(self):
+    def solve(self):
         """
         Generate a path that directly minimises lap time.
         """

@@ -28,7 +28,7 @@ class CurvatureAndLengthCompromiseOptimizer(RacelineOptimizer):
         self.velocity = self.vehicle.get_velocity_profile(self.path, self.s)
 
     
-    def optimize(self):
+    def solve(self):
         """
         Generate a path minimising a compromise between path curvature and path
         length. eps gives the weight for path length.

@@ -14,12 +14,13 @@ class AdaptiveCompromiseOptimizer(RacelineOptimizer):
         super().__init__(track, vehicle)
         self.eps_min = eps_min
         self.eps_max = eps_max
+        self.epsilon = None
         self.path = None
         self.alphas = None
         self.ns = math.ceil(track.length)
         self.update_raceline_control_points(np.full(track.size, 0.5))
     
-    def optimize(self):
+    def solve(self):
         """
         Determine the optimal compromise weight to
         produce a path.
@@ -27,7 +28,7 @@ class AdaptiveCompromiseOptimizer(RacelineOptimizer):
 
         def objfun(eps):
             optimizer = CurvatureAndLengthCompromiseOptimizer(self.track, self.vehicle, eps)
-            optimizer.optimize()
+            optimizer.solve()
             velocities = self.vehicle.get_velocity_profile(optimizer.path, optimizer.s)
             t = np.sum(np.diff(optimizer.s) / velocities)
             if self.epsilon_history.size > 0:
@@ -47,8 +48,8 @@ class AdaptiveCompromiseOptimizer(RacelineOptimizer):
         self.epsilon = res.x
 
         optimizer = CurvatureAndLengthCompromiseOptimizer(self.track, self.vehicle, self.epsilon)
-        optimizer.optimize()
+        optimizer.solve()
         self.update_raceline_control_points(optimizer.alphas)
-        
+
         end = time.time()
         return end - t0

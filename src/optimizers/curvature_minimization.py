@@ -25,7 +25,7 @@ class CurvatureMinimizationOptimizer(RacelineOptimizer):
         # Sample every metre
         self.s = np.linspace(0, self.path.length, self.ns)
 
-    def optimize(self):
+    def solve(self):
         """Generate a path minimising curvature."""
 
         def objfun(alphas):
