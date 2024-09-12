@@ -4,6 +4,7 @@
     "length_f": 2.0,  // Distance from the front axle to the center of gravity
     "length_r": 2.0,  // Distance from the rear axle to the center of gravity
     "rotational_inertia": 2000.0, //kg*m^2 // how to get those values?
+    "C_m" : 1.0, // how driver commands transfers into forward motion. //???
     "Cr_0": 0.01, // Constant rolling resistance coefficient//???
     "Cr_2": 0.0003, // Speed-dependent rolling resistance coefficient//???
     "ptv": 0.5,  // Torque vectoring parameter//???

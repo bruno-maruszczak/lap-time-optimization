@@ -114,8 +114,8 @@ class Path:
         # if s is a casadi symbolic expression
         if isinstance(s, ca.SX):
             x_values, y_values = zip(*self.curvature_lookup_table)
-            interpolated_value = self.piecewise_linear_interpolation(s, x_values, y_values)
-            return interpolated_value
+            expr = self.piecewise_linear_interpolation(s, x_values, y_values)
+            return expr
 
         # Interpolate to find the corresponding u for the given arc length s
         u = self.find_u_given_s(s)
