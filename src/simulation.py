@@ -42,13 +42,12 @@ def plot_curvatures(path : Path):
     plt.plot(path.arc_lengths_sampled, curv_sym, "r--")
     plt.show()
 
-
 def main():
     # load sample track
     track = Track('./data/tracks/buckmore.json', track_width=1.0)
     path = track.mid
     
-    plot_curvatures(path)
+    #plot_curvatures(path)
 
     # create_model
     model = VehicleModel(path)

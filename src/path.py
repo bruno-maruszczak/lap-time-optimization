@@ -20,7 +20,7 @@ class Path:
         self.dists = cumulative_distances(controls)
         self.spline, _ = splprep(controls, u=self.dists, k=3, s=0, per=self.closed)
         self.length = self.dists[-1]
-        print(self.length)
+
         # sample u, to calculate transformation u -> arc_length (return u given arc length)
         self.u_sampled = np.linspace(0, self.length, n_samples)
         self.arc_lengths_sampled = self.calculate_arc_length()
