@@ -7,11 +7,8 @@ import casadi as ca
 
 from typing import List, Tuple
 
-def piecewise_linear_interpolation(x, x_values, y_values):
-    """
-    Function should return an casadi expression that represents piecewise linear interpolation of a given lookup-table
-    """
-    raise NotImplementedError
+
+
 
 class Path:
     """Wrapper for scipy.interpolate.BSpline."""
@@ -23,15 +20,38 @@ class Path:
         self.dists = cumulative_distances(controls)
         self.spline, _ = splprep(controls, u=self.dists, k=3, s=0, per=self.closed)
         self.length = self.dists[-1]
-
+        print(self.length)
         # sample u, to calculate transformation u -> arc_length (return u given arc length)
-        self.u_sampled = np.linspace(0, 1, n_samples)
+        self.u_sampled = np.linspace(0, self.length, n_samples)
         self.arc_lengths_sampled = self.calculate_arc_length()
 
         #Generate curvature(s) as a lookup table, where s - arc legnth, 
         # for when s is a symbolic variable and its numerical value is unknown, during call
         self.curvature_lookup_table = self.create_curvature_table(n_samples)
-
+        
+    def piecewise_linear_interpolation(self,x, x_values, y_values):
+        """
+        Function should return an casadi expression that represents piecewise linear interpolation of a given lookup-table
+        """
+        # Create a CasADi MX variable for the result
+        result = ca.SX(0)
+        
+        # Iterate over the intervals between x_values
+        for i in range(len(x_values) - 1):
+            # Get the current and next x and y values
+            x0, x1 = x_values[i], x_values[i + 1]
+            y0, y1 = y_values[i], y_values[i + 1]
+            
+            # Linear interpolation between (x0, y0) and (x1, y1)
+            slope = (y1 - y0) / (x1 - x0)
+            interpolation = y0 + slope * (x - x0)
+            
+            # Apply this interpolation if x is between x0 and x1
+            result = ca.if_else(ca.logic_and(x >= x0, x < x1), interpolation, result)
+        
+        # Handle the case when x is exactly equal to the last x_value
+        result = ca.if_else(x == x_values[-1], y_values[-1], result)
+        return result
 
     def create_curvature_table(self, n_samples: int) -> List[Tuple[float, float]]:
         """
@@ -94,7 +114,7 @@ class Path:
         # if s is a casadi symbolic expression
         if isinstance(s, ca.SX):
             x_values, y_values = zip(*self.curvature_lookup_table)
-            interpolated_value = piecewise_linear_interpolation(s, x_values, y_values)
+            interpolated_value = self.piecewise_linear_interpolation(s, x_values, y_values)
             return interpolated_value
 
         # Interpolate to find the corresponding u for the given arc length s
