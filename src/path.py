@@ -3,6 +3,13 @@ from scipy.interpolate import splev, splprep
 from scipy.integrate import cumulative_trapezoid
 import matplotlib.pyplot as plt
 
+import casadi as ca
+
+from typing import List, Tuple
+
+
+
+
 class Path:
     """Wrapper for scipy.interpolate.BSpline."""
 
@@ -15,8 +22,51 @@ class Path:
         self.length = self.dists[-1]
 
         # sample u, to calculate transformation u -> arc_length (return u given arc length)
-        self.u_sampled = np.linspace(0, 1, n_samples)
+        self.u_sampled = np.linspace(0, self.length, n_samples)
         self.arc_lengths_sampled = self.calculate_arc_length()
+
+        #Generate curvature(s) as a lookup table, where s - arc legnth, 
+        # for when s is a symbolic variable and its numerical value is unknown, during call
+        self.curvature_lookup_table = self.create_curvature_table(n_samples)
+        
+    def piecewise_linear_interpolation(self,x, x_values, y_values):
+        """
+        Function should return an casadi expression that represents piecewise linear interpolation of a given lookup-table
+        """
+        # Create a CasADi MX variable for the result
+        result = ca.SX(0)
+        
+        # Iterate over the intervals between x_values
+        for i in range(len(x_values) - 1):
+            # Get the current and next x and y values
+            x0, x1 = x_values[i], x_values[i + 1]
+            y0, y1 = y_values[i], y_values[i + 1]
+            
+            # Linear interpolation between (x0, y0) and (x1, y1)
+            slope = (y1 - y0) / (x1 - x0)
+            interpolation = y0 + slope * (x - x0)
+            
+            # Apply this interpolation if x is between x0 and x1
+            result = ca.if_else(ca.logic_and(x >= x0, x < x1), interpolation, result)
+        
+        # Handle the case when x is exactly equal to the last x_value
+        result = ca.if_else(x == x_values[-1], y_values[-1], result)
+        return result
+
+    def create_curvature_table(self, n_samples: int) -> List[Tuple[float, float]]:
+        """
+        Creates a lookup table for curvature given an arc-length s for current track.
+        This is needed when arc-length is a casadi symbolic expression, so then curvature function is defined as a piecewise interpolation of the lookup table.
+
+        Parameters:
+        - n_samples: number of arc-length samples used to create the table
+
+        - Returns: a list of tuples where first is the argument and second is the function value for y = f(x) -> [(x0, y0), (x1, y1), ...]
+        """
+        s_max = self.arc_lengths_sampled[-1]
+        s_values = np.linspace(0, s_max, n_samples)
+        table = [(s, self.find_curvature_at_s(s)) for s in s_values]
+        return table
 
     def calculate_arc_length(self):
         """
@@ -55,12 +105,20 @@ class Path:
         
         Parameters:
         - s: desired arc length (distance from beginning of the curve)
-        
+            can also be a casadi symbolic expression (casadi.casadi.SX)
+    
         Returns:
         - curvature: curvature at the given arc length s
         """
+
+        # if s is a casadi symbolic expression
+        if isinstance(s, ca.SX):
+            x_values, y_values = zip(*self.curvature_lookup_table)
+            interpolated_value = self.piecewise_linear_interpolation(s, x_values, y_values)
+            return interpolated_value
+
         # Interpolate to find the corresponding u for the given arc length s
-        u = self.find_u_given_s(self, s)
+        u = self.find_u_given_s(s)
         
         # Calculate curvature at the interpolated u value
         curvature = self.curvature(u)
@@ -84,7 +142,7 @@ class Path:
         Returns:
         - curvature: the curvature values at each parameter value u
         """
-
+        
         if u is None:
             u = self.dists
 
