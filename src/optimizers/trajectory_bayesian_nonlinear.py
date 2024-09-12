@@ -2,21 +2,20 @@ import math
 import numpy as np
 import time
 from multiprocessing import Pool
-from multiprocessing import Pool
 from scipy.optimize import minimize
 from scipy.interpolate import splev, splprep
 from scipy.stats import norm
 
 from track import Track
 from utils import define_corners, idx_modulo
-from velocity import VelocityProfile
+
 from matplotlib import pyplot as plt
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
 
 from track import Track
-from vehicle import Vehicle
+from models.simple_gasoline_vehicle import Vehicle
 from path import Path
 
 class TrajectoryBayesianNonlinear:

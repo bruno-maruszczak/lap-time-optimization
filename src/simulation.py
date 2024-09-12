@@ -9,7 +9,7 @@ import casadi as ca
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-from model import VehicleModel
+from models.pacejka_tires_electric_vehicle import PacejkaTiresElectricVehicle
 from track import Track
 from path import Path
 
@@ -50,7 +50,7 @@ def main():
     #plot_curvatures(path)
 
     # create_model
-    model = VehicleModel(path)
+    model = PacejkaTiresElectricVehicle(path)
 
     # simulation
     sim = create_simulator(model.model)

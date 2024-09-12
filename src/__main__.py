@@ -5,9 +5,9 @@ from enum import IntEnum, unique
 import numpy as np
 from plot import plot_corners, plot_path, plot_trajectory
 from track import Track
-from trajectory_optimizer import TrajectoryOptimizer
-from trajectory_bayesian_nonlinear import TrajectoryBayesianNonlinear
-from vehicle import Vehicle
+from optimizers.raceline_optimizer_base import TrajectoryOptimizer
+from optimizers.trajectory_bayesian_nonlinear import TrajectoryBayesianNonlinear
+from models.simple_gasoline_vehicle import Vehicle
 from utils import save_path_to_json
 
 ###############################################################################

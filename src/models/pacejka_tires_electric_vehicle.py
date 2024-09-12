@@ -1,10 +1,10 @@
 import numpy as np
 import do_mpc
-from path import Path as Spline
+from path import Path
 import json
 
-class VehicleModel:
-    def __init__(self, track_line: Spline):
+class PacejkaTiresElectricVehicle:
+    def __init__(self, track_line: Path):
         self.track_line = track_line
         self.mass = 1.0
         self.rotational_inertia = 1.0
@@ -21,9 +21,9 @@ class VehicleModel:
         self.ptv = 0.0
         self.model = self.create_model()
 
-    def load_params(self, path):
+    def load_params(self, filepath):
         """Load vehicle data from JSON file."""
-        data = json.load(open(path))
+        data = json.load(open(filepath))
         self.rotational_inertia = data["rotational_inertia"]
         self.name = data["name"]
         self.mass = data["mass"]

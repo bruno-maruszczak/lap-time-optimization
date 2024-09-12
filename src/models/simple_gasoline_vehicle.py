@@ -1,23 +1,59 @@
+from models.vehicle_base import VehicleBase
+
+import json
 import numpy as np
 from math import sqrt
-from vehicle_2 import Vehicle2
 
 GRAV = 9.81  # ms^-2
 
 ###############################################################################
 
 
-class VelocityProfile2:
+class SimpleGasolineVehicle(VehicleBase):
+    """Vehicle parameters and behaviour."""
+
+    def __init__(self, path):
+        """Load vehicle data from JSON file."""
+        vehicle_data = json.load(open(path))
+        self.name = vehicle_data["name"]
+        self.mass = vehicle_data["mass"]
+        self.cof = vehicle_data["frictionCoefficient"]
+        self.engine_profile = [
+            vehicle_data["engineMap"]["v"],
+            vehicle_data["engineMap"]["f"]
+        ]
+        print("[ Imported {} ]".format(self.name))
+
+    def engine_force(self, velocity, gear=None):
+        """Map current velocity to force output by the engine."""
+        return np.interp(velocity, self.engine_profile[0], self.engine_profile[1])
+
+    def traction(self, velocity, curvature):
+        """Determine remaining traction when negotiating a corner."""
+        f = self.cof * self.mass * GRAV
+        f_lat = self.mass * velocity**2 * curvature
+        if f <= f_lat:
+            return 0
+        return sqrt(f**2 - f_lat**2)
+
+
+
+
+
+class VelocityProfile:
     """
     Stores and generates a velocity profile for a given path and vehicle.
     """
 
-    def __init__(self, vehicle:Vehicle2, s, k, s_max=None):
+    def __init__(self, vehicle, s, k, s_max=None):
         """
         Generate a velocity profile for the given vehicle and path parameters.
         :s: and :k: should NOT include the overlapping element for closed paths.
         The length of a closed path should be supplied in :s_max:
         """
+        s = self.s[:-1]
+        s_max = self.path.length if self.track.closed else None
+        k = self.path.curvature(s)
         self.vehicle = vehicle
         self.s = s
         self.s_max = s_max
@@ -27,14 +63,6 @@ class VelocityProfile2:
         self.v = np.minimum(self.v_acclim, self.v_declim)
 
     def limit_local_velocities(self, k):
-        # TODO
-        # no specified input here, I can give the function whatever I want
-        # I need to calculate μ - coefficient of friction
-        # in our model we do have equation: (ρ_long * FM_F)^2  + FyF^2 <= (λ * DF)^2
-        # where FM_F is motor force at the front wheel, FyF is lateral force at the front wheel, 
-        # DF is dynamic friction coefficient
-        # and λ is some parameter allowing to determine te maximum combined force
-        # dont know how from that extract μ - friction coefficient
         self.v_local = np.sqrt(self.vehicle.cof * GRAV / k)
 
     def limit_acceleration(self, k_in):

@@ -11,36 +11,42 @@ from scipy.stats import norm
 
 from track import Track
 from utils import define_corners, idx_modulo
-from velocity import VelocityProfile
+
 from matplotlib import pyplot as plt
 
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import Matern
-from sklearn.preprocessing import StandardScaler
+
 
 from track import Track
-from vehicle import Vehicle
+from models.simple_gasoline_vehicle import Vehicle
 from path import Path
 from plot import plot_path
 
-class Trajectory:
+
+class RacelineOptimizerFactory:
     """
-    Stores the geometry and dynamics of a path, handling optimisation of the
-    racing line. Samples are taken every metre.
+    Creates concrete implementations of RacelineOptimizer using different optimization strategies
     """
 
-    def __init__(self, track: 'Track', vehicle: 'Vehicle'):
-        """Store track and vehicle and initialise a centerline path."""
+class RacelineOptimizer:
+    """
+    Abstract class that stores the geometry and dynamics of a path, handling optimisation of the
+    racing line.
+    """
+
+    def __init__(self, track: Track, vehicle: Vehicle):
+        """Store track and velocity profile of the vehicle and initialise a centerline path."""
         self.track = track
         self.ns = math.ceil(track.length)
         self.update(np.full(track.size, 0.5))
         self.vehicle = vehicle
         self.velocity = None
 
+    def optimize(self):
+        pass
     def update(self, alphas):
         """Update control points and the resulting path."""
         self.alphas = alphas
-        self.path = Path(self.track.control_points(alphas), self.track.closed)
+        self.path = Spline(self.track.control_points(alphas), self.track.closed)
         # Sample every metre
         self.s = np.linspace(0, self.path.length, self.ns)
 
