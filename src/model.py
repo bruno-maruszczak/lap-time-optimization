@@ -1,13 +1,12 @@
 import numpy as np
 import do_mpc
-from path import Path as Spline
-import json
+from path import Path
 import re
 
 import casadi as ca
 
 class VehicleModel:
-    def __init__(self, params_file_path, track_line: Spline):
+    def __init__(self, params_file_path, track_line: Path):
         self.track_line = track_line
         self.mass = 1.0
         self.rotational_inertia = 1.0
@@ -22,7 +21,7 @@ class VehicleModel:
         self.Cr_0 = 0.0
         self.Cr_2 = 0.0
         self.ptv = 0.0
-
+        self.width = 1.0
         self.load_params(params_file_path)
         self.model = self.create_model()
         self.model.setup()
@@ -45,6 +44,7 @@ class VehicleModel:
             self.mass = data["mass"]
             self.length_f = data["length_f"]
             self.length_r = data["length_r"]
+            self.width = data["width"]
 
             self.B_f = data["frontTire"]["B_f"]
             self.C_f = data["frontTire"]["C_f"]
@@ -60,6 +60,24 @@ class VehicleModel:
 
     def k(self, s):
         return self.track_line.find_curvature_at_s(s)
+
+    def get_lateral_constraint(self, s, n, mu):
+        length = self.length_f + self.length_r
+        width = self.width
+
+        # !! TODO
+        def placeholder_get_bounds_at_s(s):
+            return 1.0, 1.0
+        NL, NR = placeholder_get_bounds_at_s(s)
+        
+        left_constraint = n - length * 0.5 * ca.sin(ca.sign(mu) * mu) + width * 0.5 * ca.cos(mu)
+        right_constraint = - n + length * 0.5 * ca.sin(ca.sign(mu) * mu) + width * 0.5 * ca.cos(mu)
+
+        left_constraint_trunc = ca.if_else(left_constraint > NL, left_constraint - NL, 0.0)
+        right_constraint_trunc = ca.if_else(right_constraint > NR, right_constraint - NR, 0.0)
+
+        return left_constraint_trunc * left_constraint_trunc + right_constraint_trunc * right_constraint_trunc
+
 
     def create_model(self) -> do_mpc.model.Model:
         """
