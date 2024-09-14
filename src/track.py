@@ -117,3 +117,21 @@ class Track:
             new_diff = track_width * diff / 2
             new_right[:, i] = right + new_diff
         return new_right
+
+    def get_distance_to_track(self, point, A, B, C, edge : str):
+        """
+        Used to get the distance from vehicle trajectory to the edges of the track.
+        Points are chosen as closest to a line tangent to the trajectory at a given point
+        
+        Parameters:
+        - point: given point on the trajectory
+        - A, B, C: parameters of a tangent line, as in Ax + By + C = 0.
+        - edge: ["left", "right"] choose form which edge to calculate the distance
+        Returns:
+        - Return the distance from a vehicle trajectory at given point
+        """
+        x, y = point
+
+        # spline
+        spline = self.mid.spline
+        
