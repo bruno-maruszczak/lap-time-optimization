@@ -177,7 +177,7 @@ print()
 
 method_dirs = ['curvature', 'compromise', 'laptime', 'sectors', 'estimated', 'bayesian', 'nonlinear']
 plot_dir = os.path.join(
-    os.path.dirname(__file__), '..', 'data', 'plots', track.name,
+    os.path.dirname(__file__), '..', 'data', 'plots', vehicle.name, track.name,
     method_dirs[args.method]
 )
 if not os.path.exists(plot_dir):
