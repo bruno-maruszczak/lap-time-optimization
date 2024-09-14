@@ -34,7 +34,7 @@ class RacelineOptimizer:
         self.alphas = None
         self.s = None
         self.velocity = None
-        self.path = self.track.mid
+        self.path = None
         self.ns = None
 
     def update_raceline_control_points(self, alphas):
@@ -42,6 +42,8 @@ class RacelineOptimizer:
         self.alphas = alphas
         self.path = Path(self.track.control_points(alphas), self.track.closed)
         self.s = np.linspace(0, self.path.length, self.ns)
+    
+    def update_raceline_velocity_profile(self):
         self.velocity = self.vehicle.get_velocity_profile(self.path, self.s)
 
     def lap_time(self) -> float:

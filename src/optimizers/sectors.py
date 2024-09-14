@@ -10,8 +10,8 @@ import numpy as np
 from functools import partial
 from multiprocessing import Pool
 from utils import define_corners, idx_modulo
-from raceline_optimizer_base import RacelineOptimizer
-from adaptive_compromise import AdaptiveCompromiseOptimizer
+from .raceline_optimizer_base import RacelineOptimizer
+from .adaptive_compromise import AdaptiveCompromiseOptimizer
 
 class SectorOptimizer(RacelineOptimizer):
     

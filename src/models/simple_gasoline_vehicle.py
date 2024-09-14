@@ -46,7 +46,7 @@ class SimpleGasolineVehicle(VehicleBase):
         k_in = path.find_curvature_at_s(s_in)
 
         # self.limit_local_velocities(k)
-        v_local = np.sqrt(self.vehicle.cof * GRAV / k_in)
+        v_local = np.sqrt(self.cof * GRAV / k_in)
 
         
         # self.limit_acceleration(k)
@@ -65,7 +65,7 @@ class SimpleGasolineVehicle(VehicleBase):
                 traction = self.traction(v[i-1], k[i-1])
                 force = min(self.engine_force(v[i-1]), traction)
                 accel = force / self.mass
-                ds = self.s_max - s[i-1] if wrap else s[i] - s[i-1]
+                ds = s_max - s[i-1] if wrap else s[i] - s[i-1]
                 vlim = sqrt(v[i-1]**2 + 2*accel*ds)
                 v[i] = min(v[i], vlim)
 
