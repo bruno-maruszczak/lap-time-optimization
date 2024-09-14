@@ -8,6 +8,7 @@ import casadi as ca
 class VehicleModel:
     def __init__(self, params_file_path, track_line: Path):
         self.track_line = track_line
+        self.g = 9.81
         self.mass = 1.0
         self.rotational_inertia = 1.0
         self.length_f = 1.0
@@ -78,6 +79,35 @@ class VehicleModel:
 
         return left_constraint_trunc * left_constraint_trunc + right_constraint_trunc * right_constraint_trunc
 
+    def get_traction_ellipse_constraint(self, throttle, vx, vy, r, steering_angle, rho=1.0, alpha=1.0):
+        long = rho * 0.5 * self.get_motor_force(throttle)
+        af, ar = self.get_slip_angles(vx, vy, r, steering_angle)
+        Fy_f, Fy_r = self.get_lateral_forces(af, ar)
+        Df = alpha * self.D_f
+        Dr = alpha * self.D_r
+        ellipse_f = long*long - Fy_f*Fy_f - Df*Df
+        ellipse_r = long*long - Fy_r*Fy_r - Dr*Dr
+
+        ellipse_f_trunc = ca.if_else(ellipse_f > 0.0, ellipse_f, 0.0)
+        ellipse_r_trunc = ca.if_else(ellipse_r > 0.0, ellipse_r, 0.0)
+
+        return ellipse_f_trunc + ellipse_r_trunc
+
+    def get_slip_angles(self, vx, vy, r, steering_angle):
+        alpha_f = ca.atan((vy + self.length_f*r)/vx) - steering_angle
+        alpha_r = ca.atan((vy - self.length_r*r)/vx)
+        return alpha_f, alpha_r
+
+    def get_lateral_forces(self, alpha_f, alpha_r):
+        Fn_f = self.length_r * self.mass * self.g / (self.length_f + self.length_r)
+        Fn_r = self.length_f * self.mass * self.g / (self.length_f + self.length_r)
+
+        Fy_f = Fn_f * self.D_f * ca.sin(self.C_f * ca.atan(self.B_f * alpha_f))
+        Fy_r = Fn_r * self.D_r * ca.sin(self.C_r * ca.atan(self.B_r * alpha_r))
+        return Fy_f, Fy_r
+    
+    def get_motor_force(self, throttle):
+        return self.C_m * throttle
 
     def create_model(self) -> do_mpc.model.Model:
         """
@@ -104,15 +134,12 @@ class VehicleModel:
         sdot = (vx*ca.cos(mu) - vy*ca.sin(mu)) / (1 - n * self.k(s))
         
         # Tires
-        alpha_f = ca.atan((vy + self.length_f*r)/vx) - steering_angle
-        alpha_r = ca.atan((vy - self.length_r*r)/vx)
-        g = 9.81
-        Fn_f = self.length_r * self.mass * g / (self.length_f + self.length_r)
-        Fn_r = self.length_f * self.mass * g / (self.length_f + self.length_r)
-        Fy_f = Fn_f * self.D_f * ca.sin(self.C_f * ca.atan(self.B_f * alpha_f))
-        Fy_r = Fn_r * self.D_r * ca.sin(self.C_r * ca.atan(self.B_r * alpha_r))
+
+        alpha_f, alpha_r = self.get_slip_angles(vx, vy, r, steering_angle)
+
+        Fy_f, Fy_r = self.get_lateral_forces(alpha_f, alpha_r)
         
-        Fx = self.C_m * throttle - self.Cr_0 - self.Cr_2 * vx * vx
+        Fx =  self.get_motor_force(throttle) - self.Cr_0 - self.Cr_2 * vx * vx
 
         rt = (ca.tan(steering_angle)*vx)/(self.length_f + self.length_r)
         Mtv = self.ptv * (rt - r)
