@@ -52,7 +52,7 @@ class VehicleModel:
             self.B_r = data["rearTire"]["B_r"]
             self.C_r = data["rearTire"]["C_r"]
 
-            self.C_m = data["C_m"]
+            self.C_m = data["control"]["C_m"]
             self.Cr_0 = data["Cr_0"]
             self.Cr_2 = data["Cr_2"]
             self.ptv = data["ptv"]
