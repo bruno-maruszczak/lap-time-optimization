@@ -11,7 +11,7 @@ import matplotlib as mpl
 
 from model import VehicleModel
 from track import Track
-from path import Path
+from path import Path, ControllerReferencePath
 
 def create_simulator(model : do_mpc.model.Model) -> do_mpc.simulator.Simulator:
     simulator = do_mpc.simulator.Simulator(model)
