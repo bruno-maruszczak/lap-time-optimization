@@ -8,25 +8,12 @@ import casadi as ca
 from models.vehicle_base import VehicleBase
 
 class PacejkaTiresElectricVehicle(VehicleBase):
-    def __init__(self, params_filepath, track_line: Path):
-        self.track_line = track_line
-        self.mass = 1.0
-        self.rotational_inertia = 1.0
-        self.length_f = 1.0
-        self.B_f = 1.0
-        self.C_f = 1.0
-        self.D_f = 1.0
-        self.length_r = 1.0
-        self.B_r = 1.0
-        self.C_r = 1.0
-        self.D_r = 1.0
-        self.Cr_0 = 0.0
-        self.Cr_2 = 0.0
-        self.ptv = 0.0
-
-        self.load_params(params_filepath)
-        self.model = self.create_model()
-        self.model.setup()
+    def __init__(self, vehicle_filepath):#, track_line: Path):
+        # self.track_line = track_line
+        self.load_params(vehicle_filepath)
+        # self.model = self.create_model()
+        # self.model.setup()
+        print("[ Imported {} ]".format(self.name))
 
     def remove_comments(self, json_str):
         # Remove single-line comments
@@ -58,7 +45,7 @@ class PacejkaTiresElectricVehicle(VehicleBase):
             self.D_r = data["rearTire"]["D_r"]
 
             # mechanical transmision
-            self.C_m = data["C_m"]
+            self.C_m = data["control"]["C_m"]
             # rolling resistance
             self.Cr_0 = data["Cr_0"]
             # resistance proportional to square of velocity
@@ -71,6 +58,19 @@ class PacejkaTiresElectricVehicle(VehicleBase):
             self.friction_coef = data["control"]["lambda"]
             # eliptical parameter for friction ellipse
             self.ro_long = data["control"]["ro_long"]
+
+    def engine_force(self, velocity, gear=None):
+        """maximum engine force"""
+        # for this model we assume that the engine force is constant
+        F_M = self.C_m * self.T
+        return F_M
+
+    def traction(self, velocity, curvature):
+        """Determine remaining traction when negotiating a corner."""
+        # vx is velocity in longitudinal direction, it is our v_resultant in path coordinate system
+        f_long = (self.T * self.C_m) - self.Cr_0 - (self.Cr_2 * (velocity**2))
+        # print(f"traction: {f_long}")
+        return f_long
 
 
     def k(self, s):

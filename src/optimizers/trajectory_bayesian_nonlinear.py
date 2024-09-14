@@ -15,7 +15,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
 
 from track import Track
-from models.simple_gasoline_vehicle import Vehicle
+from models.simple_gasoline_vehicle import SimpleGasolineVehicle
 from path import Path
 
 class TrajectoryBayesianNonlinear:
@@ -24,7 +24,7 @@ class TrajectoryBayesianNonlinear:
     racing line. Samples are taken every metre. It's implemented for two optimisation methods, Bayesian and Nonlinear.
     """
 
-    def __init__(self, track: 'Track', vehicle: 'Vehicle'):
+    def __init__(self, track: 'Track', vehicle: 'SimpleGasolineVehicle'):
         """Store track and vehicle and initialise a centerline path."""
         self.track = track
         self.ns = math.ceil(track.length)

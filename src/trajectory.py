@@ -20,8 +20,6 @@ from sklearn.gaussian_process.kernels import Matern
 from sklearn.preprocessing import StandardScaler
 
 from track import Track
-from vehicle import Vehicle
-from vehicle_2 import Vehicle2
 from path import Path
 from plot import plot_path
 

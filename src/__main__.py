@@ -6,8 +6,10 @@ import numpy as np
 from plot import plot_corners, plot_path, plot_trajectory
 from track import Track
 from optimizers.trajectory_bayesian_nonlinear import TrajectoryBayesianNonlinear
+from trajectory import Trajectory
 import optimizers
-from models.simple_gasoline_vehicle import Vehicle
+from models.simple_gasoline_vehicle import SimpleGasolineVehicle
+from models.pacejka_tires_electric_vehicle import PacejkaTiresElectricVehicle
 from utils import save_path_to_json
 
 ###############################################################################
@@ -97,14 +99,16 @@ args = parser.parse_args()
 track_width = args.track_width[0]
 track = Track(args.track[0], track_width=track_width)
 print(f"vehicle: {args.vehicle[0]}")
-if args.vehicle[0] == "./data/vehicles/experiment.json":
-    vehicle = Vehicle2(args.vehicle[0])
+if args.vehicle[0] == "./data/vehicles/our_car.json":
+    vehicle = PacejkaTiresElectricVehicle(args.vehicle[0])
 else:
-    vehicle = Vehicle(args.vehicle[0])
+    vehicle = SimpleGasolineVehicle(args.vehicle[0])
+
+
 if args.method is Method.BAYES or args.method is Method.NONLINEAR:
     trajectory = TrajectoryBayesianNonlinear(track, vehicle)
 else:
-    trajectory = TrajectoryOptimizer(track, vehicle)
+    trajectory = Trajectory(track, vehicle)
 
 # Corner detection parameters
 K_MIN = 0.03
