@@ -5,9 +5,9 @@ import json
 import re
 
 import casadi as ca
+from models.vehicle_base import VehicleBase
 
-
-class PacejkaTiresElectricVehicle:
+class PacejkaTiresElectricVehicle(VehicleBase):
     def __init__(self, params_filepath, track_line: Path):
         self.track_line = track_line
         self.mass = 1.0
@@ -47,16 +47,30 @@ class PacejkaTiresElectricVehicle:
             self.length_f = data["length_f"]
             self.length_r = data["length_r"]
 
+            # Pacejka tire parameters:
+            # front tire:
             self.B_f = data["frontTire"]["B_f"]
             self.C_f = data["frontTire"]["C_f"]
-            
+            self.D_f = data["frontTire"]["D_f"]
+            # rear tire:
             self.B_r = data["rearTire"]["B_r"]
             self.C_r = data["rearTire"]["C_r"]
+            self.D_r = data["rearTire"]["D_r"]
 
+            # mechanical transmision
             self.C_m = data["C_m"]
+            # rolling resistance
             self.Cr_0 = data["Cr_0"]
+            # resistance proportional to square of velocity
             self.Cr_2 = data["Cr_2"]
             self.ptv = data["ptv"]
+
+            # Engine control inputs and parameters:
+            # forward/backward direction
+            self.T = data["control"]["T"]
+            self.friction_coef = data["control"]["lambda"]
+            # eliptical parameter for friction ellipse
+            self.ro_long = data["control"]["ro_long"]
 
 
     def k(self, s):
