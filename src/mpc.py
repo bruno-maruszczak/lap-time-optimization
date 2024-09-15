@@ -1,16 +1,39 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from track import Track
+from mpc.track import Track as Track
 from mpc.model import VehicleModel
 from mpc.controller import Controller
 from mpc.simulator import Simulator
 
-def main():
-    # load sample track
-    track = Track('./data/tracks/buckmore.json', track_width=1.0)
-    path = track.mid
-    
+def main(): 
+    track = Track("Mazda MX-5", "buckmore", "curvature")
+    path = track.optimal_path
+
+    # Plot points for left, right distance
+    X = []
+    Y = []
+    X2 = []
+    Y2 = []
+    for s in path.arc_lengths_sampled:
+        point, dist = track.find_dist_to_band(s, side="left")
+        x, y = point
+        #print(dist)
+        X.append(x)
+        Y.append(y)
+
+    for s in path.arc_lengths_sampled:
+        point, dist = track.find_dist_to_band(s, side="right")
+        x, y = point
+        #print(dist)
+        X2.append(x)
+        Y2.append(y)
+
+    plt.scatter(X, Y, marker="x", s=12)
+    plt.scatter(X2, Y2, marker="x", s=12, c="b")
+    plt.show()
+
+    exit()
     #plot_curvatures(path)
 
     # create_model
