@@ -15,6 +15,7 @@ class Track:
         self.left_bound_x, self.left_bound_y = self.load_path_from_json(os.path.join(base_path, "left.json"))
         self.right_bound_x, self.right_bound_y = self.load_path_from_json(os.path.join(base_path, "right.json"))
         self.path_x, self.path_y = self.load_path_from_json(os.path.join(base_path, "path.json"))
+        self.widths = self.load_path_from_json(os.path.join(base_path, "widths.json"))
 
         self.n_samples = 1000
         self.left_bound = ControllerReferencePath(np.array([self.left_bound_x, self.left_bound_y]), closed=True, n_samples=self.n_samples)
@@ -40,10 +41,12 @@ class Track:
             data = json.load(f)
         
         name = data["name"]
-        x = np.array(data["path"]["x"])
-        y = np.array(data["path"]["y"])
-        
-        return x, y
+        if name == "widths":
+            return np.array(data["width"])
+        else:
+            x = np.array(data["path"]["x"])
+            y = np.array(data["path"]["y"])
+            return x, y
     
     def plot(self):
         plt.scatter(self.left_bound_x, self.left_bound_y, color='tab:blue', marker='.')
@@ -126,11 +129,21 @@ class Track:
         sorted_indices = np.argsort(distances)
 
         # Get the two closest points
-        closest_points = [(x[i], y[i]) for i in sorted_indices[:16]]
+        closest_points = [(x[i], y[i]) for i in sorted_indices[:]]
 
         # Choose the one closer to the (x0, y0) point on the curve
-        closest_point = min(closest_points, key=lambda p: np.hypot(p[0] - x0, p[1] - y0))
-        distance = np.hypot(closest_point[0] - x0, closest_point[1] - y0)
+        closest_point = None
+        min_distance = float('inf')
+        for point in closest_points:
+            dist = np.hypot(point[0] - x0, point[1] - y0)
+            if dist < min_distance and dist <= 8:
+                min_distance = dist
+                closest_point = point
+
+        if closest_point is None:
+            raise ValueError("No point found within the radius of 4.5")
+
+        distance = min_distance
 
         return closest_point, distance
 

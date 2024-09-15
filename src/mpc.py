@@ -31,7 +31,7 @@ def main():
 
     plt.scatter(X, Y, marker="x", s=12)
     plt.scatter(X2, Y2, marker="x", s=12, c="b")
-    plt.show()
+    # plt.show()
 
     exit()
     #plot_curvatures(path)
