@@ -18,13 +18,13 @@ class Controller:
     def __init__(self, model : VehicleModel, control_costs : ArrayLike, n_horizon : int = 20, t_step : float = 0.1, n_robust : int = 1):
         self.model = model
         self.mpc_model = self.model.model
-
+        self.t_step = t_step
         self.mpc = do_mpc.controller.MPC(self.mpc_model)
 
         setup_mpc = {
             'n_horizon' : n_horizon,
-            't-step' : 0.1,
-            'n_robust' : 2,
+            't-step' : t_step,
+            'n_robust' : n_robust,
             'store_full_solution' : True,
         }
         self.mpc.set_param(**setup_mpc)    
@@ -39,7 +39,7 @@ class Controller:
         r_term = {key : cost for key, cost in zip(self.mpc_model.u.keys(), control_costs)}
         self.mpc.set_rterm(**r_term) 
 
-        # mterm - Add algebraic constraints here 
+        # mterm - Add algebraic constraints here
         return #TODO
         mterm = None
         lterm = None
