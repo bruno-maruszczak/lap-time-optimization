@@ -93,7 +93,6 @@ class Track:
         i = np.nonzero(alphas != -1)[0]
         return self.left_decongested[:, i] + (alphas[i] * self.diffs_decongested[:,i])
     
-     # TODO: put that method inside read_cones
     def new_left_cones(self, old_left, old_right, track_width):
         """Return new left cones based on old left cones and track width parameter."""
         new_left = np.zeros((2, old_left[0].size))
@@ -118,20 +117,5 @@ class Track:
             new_right[:, i] = right + new_diff
         return new_right
 
-    def get_distance_to_track(self, point, A, B, C, edge : str):
-        """
-        Used to get the distance from vehicle trajectory to the edges of the track.
-        Points are chosen as closest to a line tangent to the trajectory at a given point
-        
-        Parameters:
-        - point: given point on the trajectory
-        - A, B, C: parameters of a tangent line, as in Ax + By + C = 0.
-        - edge: ["left", "right"] choose form which edge to calculate the distance
-        Returns:
-        - Return the distance from a vehicle trajectory at given point
-        """
-        x, y = point
-
-        # spline
-        spline = self.mid.spline
+    
         
