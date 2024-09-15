@@ -4,6 +4,7 @@ from path import Path
 import re
 
 import casadi as ca
+import json
 
 class VehicleModel:
     def __init__(self, params_file_path, track_line: Path):
