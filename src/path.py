@@ -193,4 +193,10 @@ class ControllerReferencePath(Path):
         curvature = self.curvature(u)
         
         return curvature
+
+    def get_sample_points(self):
+        """
+        Return the finely sampled points on the curve.
+        """
+        return splev(self.u_sampled, self.spline)
     
