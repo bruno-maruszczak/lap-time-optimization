@@ -80,6 +80,7 @@ class Track:
     
     def find_dist_to_bound(self, s, side : str="left"):
 
+
         def tangent_line(x0, y0, dx, dy):
             """
             Finds a line tangent to a curve at a given point
@@ -139,11 +140,41 @@ class Track:
         A, B, C = perpendicular_line
         denom = np.sqrt(A**2 + B**2)
     
+
         # Sort the points on bound by distance to the line
         # points = bound.get_sample_points()
         # points.sort(key = lambda())
         # for x, y in bound.get_sample_points():
         #     dist = abs(A * x + B * y + C) / denom
+
+
+
+    def find_intersections(self, point, A, B, C, bound):
+        """
+        Find the two closest intersection points of the bound spline with the line Ax + By + C = 0.
+
+        Parameters:
+        point - the point on the optimal path
+        A, B, C - coefficients of the line equation
+        bound - the spline representing the bound (left or right)
+
+        Returns:
+        Two closest intersection points as tuples (x, y)
+        """
+        x0, y0 = point
+        u_fine = np.linspace(0, 1, 1000)
+        x_fine, y_fine = splev(u_fine, bound)
+
+        distances = np.abs(A * x_fine + B * y_fine + C) / np.sqrt(A**2 + B**2)
+        sorted_indices = np.argsort(distances)
+
+        # Get the two closest points
+        closest_points = [(x_fine[i], y_fine[i]) for i in sorted_indices[:2]]
+
+        closest_point = min(closest_points, key=lambda p: np.hypot(p[0] - x0, p[1] - y0))
+        distance = np.hypot(closest_point[0] - x0, closest_point[1] - y0)
+
+        return distance
 
 
 track = Track("Mazda MX-5", "buckmore", "curvature")
