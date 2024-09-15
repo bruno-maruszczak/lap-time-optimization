@@ -196,7 +196,7 @@ if args.plot_path or args.plot_all:
         track.old_left, track.old_right, trajectory.path.position(trajectory.s),
         trajectory.path.controls
     )
-    save_path_to_json(plot_dir, trajectory.path.position(trajectory.s)[0], trajectory.path.position(trajectory.s)[1], f"path_{track.name}")
+    save_path_to_json(plot_dir, trajectory.path.position(trajectory.s)[0], trajectory.path.position(trajectory.s)[1], f"path")
 
 if args.plot_trajectory or args.plot_all:
 
@@ -206,6 +206,10 @@ if args.plot_trajectory or args.plot_all:
         trajectory.velocity.v
     )
 
+# saving left and right boundries of track to json file
+save_path_to_json(plot_dir, track.old_left[0], track.old_left[1], f"left")
+save_path_to_json(plot_dir, track.old_right[0], track.old_right[1], f"right")  
 
-print(f" track size: {track.size}")
+
+print(f"track size: {track.size}")
 print(f"widths: {len(track.widths)}")
