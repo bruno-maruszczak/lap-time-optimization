@@ -77,16 +77,73 @@ class Track:
     
     def plot_line_and_tangent(self, point, A, B, C, A_tangent, B_tangent, C_tangent):
         pass
-
-    def get_distance_to_track(self, A, B, C, edge):
-        """
-        Used to get the distance from vehicle trajectory to the edges of the track.
-        Points are chosen as closest to a line tangent to the trajectory at a given point
-        Returns the distance from a vehicle trajectory at given point
-        """
-        x, y = point
-
-        # spline
-        spline = self.mid.spline
     
+    def find_dist_to_bound(self, s, side : str="left"):
+
+        def tangent_line(x0, y0, dx, dy):
+            """
+            Finds a line tangent to a curve at a given point
+            
+            Parameters:
+            x0, y0 - the given point
+            dx, dy - derivatives of a curve in respect to the parameter u
+
+            Returns:
+            - a tuple (A, B, C) in general line form: Ax + By + C = 0
+            """
+            if dx == 0:
+                return (0, 1, -x0)
+            else:
+                slope = dy/dx
+                return (-1, slope, y0-slope*x0)
+        
+        def perpendicular_line(line : tuple, x0, y0):
+            """
+            Finds a line perpendicular to a line at a given point 
+            
+            Parameters:
+            x0, y0 - the given point
+            line - a tuple (A, B, C) in general line form: Ax + By + C = 0
+
+            Returns:
+            - a tuple (A, B, C) in general line form: Ax + By + C = 0 of the perpendicular line
+            """
+            A, B, C = line
+            assert A != 0 or B != 0
+
+            if A == 0:
+                perp_line = (0, 1, -y0)
+            elif B == 0:
+                perp_line = (1, 0, -x0)
+            else:
+                slope = B / A
+                perp_line = (-slope, 1, -y0 + slope*x0)
+            return perp_line
+            
+        assert isinstance(s, (int, float)) # s should be a number, not a list, tuple, etc..
+        assert side in ["left", "right"]
+
+        u = self.optimal_path.find_u_given_s(s)
+        
+        # Find x, y, dx, dy of the spline
+        tck = self.optimal_path.spline
+        x0, y0 = splev(u, tck)
+        dx, dy = splev(u, tck, der=1)
+        
+        # find perpendicular_line
+        tangent = tangent_line(x0, y0, dx, dy)
+        perpendicular_line = (tangent, x0, y0)
+        
+        bound = self.left_bound if side == "left" else self.right_bound
+
+        A, B, C = perpendicular_line
+        denom = np.sqrt(A**2 + B**2)
+    
+        # Sort the points on bound by distance to the line
+        # points = bound.get_sample_points()
+        # points.sort(key = lambda())
+        # for x, y in bound.get_sample_points():
+        #     dist = abs(A * x + B * y + C) / denom
+
+
 track = Track("Mazda MX-5", "buckmore", "curvature")
