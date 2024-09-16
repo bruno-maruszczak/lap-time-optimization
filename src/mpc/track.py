@@ -8,7 +8,7 @@ from scipy.interpolate import splprep, splev
 from path import ControllerReferencePath
 
 class Track:
-    def __init__(self, vehicle_name, track_name, method_name):
+    def __init__(self, vehicle_name, track_name, method_name, n_samples):
         cwd = os.getcwd()
         base_path = os.path.join(cwd, "data", "plots", vehicle_name, track_name, method_name)
 
@@ -17,7 +17,7 @@ class Track:
         self.path_x, self.path_y = self.load_path_from_json(os.path.join(base_path, "path.json"))
         self.widths = self.load_path_from_json(os.path.join(base_path, "widths.json"))
 
-        self.n_samples = 1000
+        self.n_samples = n_samples
         self.left_bound = ControllerReferencePath(np.array([self.left_bound_x, self.left_bound_y]), closed=True, n_samples=self.n_samples)
         self.right_bound = ControllerReferencePath(np.array([self.right_bound_x, self.right_bound_y]), closed=True, n_samples=self.n_samples)
         self.optimal_path = ControllerReferencePath(np.array([self.path_x, self.path_y]), closed=True, n_samples=self.n_samples)
@@ -32,7 +32,7 @@ class Track:
         self.plotting_spline(self.left_bound)
         self.plotting_spline(self.right_bound)
         self.plot()
-        plt.show()
+        #plt.show()
         # self.get_tangent_to_spline(self.optimal_path, self.point)
     
     def load_path_from_json(self, filepath):
@@ -111,7 +111,13 @@ class Track:
 
         assert side in ["left", "right"]
 
-        u = s #self.optimal_path.find_u_given_s(s)
+        if isinstance(s, ca.SX):
+            y_values = self.bound_dist_table[side]
+            x_values = self.optimal_path.arc_lengths_sampled
+            expr = self.optimal_path.piecewise_linear_interpolation(s, x_values, y_values)
+            return expr
+        
+        u = self.optimal_path.find_u_given_s(s)
         # Find x, y, dx, dy of the spline
         tck = self.optimal_path.spline
         x0, y0 = splev(u, tck)
@@ -136,7 +142,7 @@ class Track:
         min_distance = float('inf')
         for point in closest_points:
             dist = np.hypot(point[0] - x0, point[1] - y0)
-            if dist < min_distance and dist <= 8:
+            if dist < min_distance and dist <= 10: 
                 min_distance = dist
                 closest_point = point
 
@@ -145,7 +151,7 @@ class Track:
 
         distance = min_distance
 
-        return closest_point, distance
+        return distance
 
     def create_distance_table(self, side : str="left"):
         """

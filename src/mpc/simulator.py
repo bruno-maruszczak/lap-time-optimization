@@ -15,7 +15,7 @@ class Simulator:
         self.model = model
         self.mpc_model = model.model
 
-        self.simulator = do_mpc.simulator.Simulator(model)
+        self.simulator = do_mpc.simulator.Simulator(self.mpc_model)
         self.simulator.set_param(t_step = 0.1)
         self.simulator.setup()
 
@@ -66,4 +66,3 @@ class Simulator:
         plt.figure()
         plt.plot(lookup[:, 0].tolist(), lookup[:, 1].tolist())
         plt.plot(path.arc_lengths_sampled, curv_sym, "r--")
-        plt.show()
