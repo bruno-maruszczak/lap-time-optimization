@@ -6,9 +6,13 @@ import re
 import casadi as ca
 import json
 
+from mpc.track import Track
+
 class VehicleModel:
-    def __init__(self, params_file_path, track_line: Path):
-        self.track_line = track_line
+    def __init__(self, params_file_path, track: Track):
+        self.track = track
+        self.optimal_path = self.track.optimal_path
+
         self.g = 9.81
         self.mass = 1.0
         self.rotational_inertia = 1.0
@@ -59,26 +63,29 @@ class VehicleModel:
             self.Cr_2 = data["Cr_2"]
             self.ptv = data["ptv"]
 
-
     def k(self, s):
-        return self.track_line.find_curvature_at_s(s)
+        return self.optimal_path.find_curvature_at_s(s)
+
+    def N_R(self, s):
+        return self.track.find_dist_to_band(s, "right")
+
+    def N_L(self, s):
+        return self.track.find_dist_to_band(s, "left")
 
     def get_lateral_constraint(self, s, n, mu):
         length = self.length_f + self.length_r
         width = self.width
 
-        # !! TODO
-        def placeholder_get_bounds_at_s(s):
-            return 1.0, 1.0
-        NL, NR = placeholder_get_bounds_at_s(s)
+        NL, NR = self.N_L(s), self.N_R(s)
         
-        left_constraint = n - length * 0.5 * ca.sin(ca.sign(mu) * mu) + width * 0.5 * ca.cos(mu)
-        right_constraint = - n + length * 0.5 * ca.sin(ca.sign(mu) * mu) + width * 0.5 * ca.cos(mu)
+        left_constraint = n - length * 0.5 * ca.sin(ca.sign(mu) * mu) + width * 0.5 * ca.cos(mu) - NL
+        right_constraint = - n + length * 0.5 * ca.sin(ca.sign(mu) * mu) + width * 0.5 * ca.cos(mu) - NR
 
-        left_constraint_trunc = ca.if_else(left_constraint > NL, left_constraint - NL, 0.0)
-        right_constraint_trunc = ca.if_else(right_constraint > NR, right_constraint - NR, 0.0)
+        # TODO what are these for?
+        # left_constraint_trunc = ca.if_else(left_constraint > NL, left_constraint - NL, 0.0)
+        # right_constraint_trunc = ca.if_else(right_constraint > NR, right_constraint - NR, 0.0)
 
-        return left_constraint_trunc * left_constraint_trunc + right_constraint_trunc * right_constraint_trunc
+        return left_constraint, right_constraint
 
     def get_traction_ellipse_constraint(self, throttle, vx, vy, r, steering_angle, rho=1.0, alpha=1.0):
         long = rho * 0.5 * self.get_motor_force(throttle)
@@ -86,13 +93,14 @@ class VehicleModel:
         Fy_f, Fy_r = self.get_lateral_forces(af, ar)
         Df = alpha * self.D_f
         Dr = alpha * self.D_r
-        ellipse_f = long*long - Fy_f*Fy_f - Df*Df
-        ellipse_r = long*long - Fy_r*Fy_r - Dr*Dr
+        ellipse_f = long*long + Fy_f*Fy_f - Df*Df
+        ellipse_r = long*long + Fy_r*Fy_r - Dr*Dr
 
-        ellipse_f_trunc = ca.if_else(ellipse_f > 0.0, ellipse_f, 0.0)
-        ellipse_r_trunc = ca.if_else(ellipse_r > 0.0, ellipse_r, 0.0)
+        # TODO what are these for?
+        # ellipse_f_trunc = ca.if_else(ellipse_f > 0.0, ellipse_f, 0.0)
+        # ellipse_r_trunc = ca.if_else(ellipse_r > 0.0, ellipse_r, 0.0)
 
-        return ellipse_f_trunc + ellipse_r_trunc
+        return ellipse_f, ellipse_r
 
     def get_slip_angles(self, vx, vy, r, steering_angle):
         alpha_f = ca.atan((vy + self.length_f*r)/vx) - steering_angle
@@ -110,6 +118,11 @@ class VehicleModel:
     def get_motor_force(self, throttle):
         return self.C_m * throttle
 
+    def sdot(self):
+        x = self.model.x
+        sdot = (x['vx']*ca.cos(x['mu']) - x['vy']*ca.sin(x['mu'])) / (1 - x['n'] * self.k(x['s']))
+        return sdot
+    
     def create_model(self) -> do_mpc.model.Model:
         """
         Setups all variables, inputs, parameters of an MPC model.
