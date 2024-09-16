@@ -20,13 +20,19 @@ class Controller:
         }
         self.mpc.set_param(**setup_mpc)    
 
+        # rho determines the shape of the friction ellipse constraint
+        # alpha determines the maximum combined force. (the size of the ellipse)
         alpha, rho = 1.0, 1.0
-        q_n, q_mu = 1.0, 1.0
+
+        # q_n is a cost for deviating from the optimal path (in perpendicular to path direction)
+        # q_mu is a cost for a heading that deviates from the optimal path
+        # q_B penalizes the difference between the kinematic and dynamic side slip angle.
+        q_n, q_mu, q_B = 1e-2, 1e-2, 1e-2
         self.set_constraints(rho, alpha)
-        self.set_objective(control_costs, q_n, q_mu)
+        self.set_objective(control_costs, q_n, q_mu, q_B)
         self.mpc.setup()
 
-    def set_objective(self, control_costs, q_n = 1.0, q_mu = 1.0):
+    def set_objective(self, control_costs, q_n = 1.0, q_mu = 1.0, q_B = 1.0):
         u_dim = len(self.mpc_model.u.labels())
         assert (control_costs.shape == (u_dim, 1))
         
@@ -40,9 +46,7 @@ class Controller:
         mu = self.mpc_model.x['mu']
 
         # mterm - Add algebraic constraints here
-        # TODO B(x)
-        # 
-        lterm = -self.t_step*(sdot) + q_n*(n**2) + q_mu*(mu**2) #+ B(self.mpc_model.x)
+        lterm = -self.t_step*(sdot) + q_n*(n**2) + q_mu*(mu**2) + self.model.B(q_B)
         mterm = ca.SX(0)
         self.mpc.set_objective(lterm=lterm, mterm=mterm)
 
@@ -65,33 +69,33 @@ class Controller:
         self.mpc.set_nl_cons('front_traction_ellipse_cons', front, 0.)
         self.mpc.set_nl_cons('back_traction_ellipse_cons', back, 0.)
 
-        # TODO poitentially add additional constraints, ex. for sterring angle, throttle or inputs
+        # TODO Set constraints for velocities, from calculated optimal max_velocities. 
         not_set = 0.
         # Lower state bounds
         self.mpc.bounds['lower', '_x', 's'] = 0.
         self.mpc.bounds['lower', '_x', 'n'] = 0.
-        self.mpc.bounds['lower', '_x', 'mu'] = 0.
-        # self.mpc.bounds['lower', '_x', 'vx'] = not_set
+        self.mpc.bounds['lower', '_x', 'mu'] = -np.pi #TODO
+        self.mpc.bounds['lower', '_x', 'vx'] = 0. # TODO
         # self.mpc.bounds['lower', '_x', 'vy'] = not_set
         # self.mpc.bounds['lower', '_x', 'r'] = not_set
-        # self.mpc.bounds['lower', '_x', 'steering_angle'] = not_set
-        # self.mpc.bounds['lower', '_x', 'throttle'] = not_set
+        self.mpc.bounds['lower', '_x', 'steering_angle'] = -np.pi/4
+        self.mpc.bounds['lower', '_x', 'throttle'] = -1
 
         # # Upper state bounds
         # self.mpc.bounds['upper', '_x', 's'] = not_set
         # self.mpc.bounds['upper', '_x', 'n'] = not_set 
-        # self.mpc.bounds['upper', '_x', 'mu'] = not_set
+        self.mpc.bounds['upper', '_x', 'mu'] = np.pi # TODO
         # self.mpc.bounds['upper', '_x', 'vx'] = not_set
         # self.mpc.bounds['upper', '_x', 'vy'] = not_set
         # self.mpc.bounds['upper', '_x', 'r'] = not_set 
-        # self.mpc.bounds['upper', '_x', 'steering_angle'] = not_set 
-        # self.mpc.bounds['upper', '_x', 'throttle'] = not_set 
+        self.mpc.bounds['upper', '_x', 'steering_angle'] = np.pi/4
+        self.mpc.bounds['upper', '_x', 'throttle'] = 1
 
-        # # Lower input bounds
-        # self.mpc.bounds['lower', '_u', 'steering_angle_change'] = not_set 
-        # self.mpc.bounds['lower', '_u', 'throttle_change'] = not_set 
+        # Lower input bounds
+        self.mpc.bounds['lower', '_u', 'steering_angle_change'] = -2*np.pi/4
+        self.mpc.bounds['lower', '_u', 'throttle_change'] = -1 
 
-        # # Upper input bounds
-        # self.mpc.bounds['upper', '_u', 'steering_angle_change'] = not_set 
-        # self.mpc.bounds['upper', '_u', 'throttle_change'] = not_set 
+        # Upper input bounds
+        self.mpc.bounds['upper', '_u', 'steering_angle_change'] = 2*np.pi/4
+        self.mpc.bounds['upper', '_u', 'throttle_change'] = 1
 

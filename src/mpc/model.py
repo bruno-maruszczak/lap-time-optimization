@@ -71,7 +71,7 @@ class VehicleModel:
 
     def N_L(self, s):
         return self.track.find_dist_to_band(s, "left")
-
+    
     def get_lateral_constraint(self, s, n, mu):
         length = self.length_f + self.length_r
         width = self.width
@@ -122,7 +122,13 @@ class VehicleModel:
         x = self.model.x
         sdot = (x['vx']*ca.cos(x['mu']) - x['vy']*ca.sin(x['mu'])) / (1 - x['n'] * self.k(x['s']))
         return sdot
-    
+
+    def B(self, q_B):
+        x = self.model.x
+        b_dyn = ca.atan(x['vy']/x['vx'])
+        b_kin = ca.atan(x['steering_angle']*self.length_r / (self.length_f + self.length_r))
+        return q_B * (b_dyn - b_kin)**2
+
     def create_model(self) -> do_mpc.model.Model:
         """
         Setups all variables, inputs, parameters of an MPC model.
