@@ -7,6 +7,7 @@ from mpc.track import Track as Track
 from mpc.model import VehicleModel
 from mpc.controller import Controller
 from mpc.simulator import Simulator
+import do_mpc
 
 import casadi as ca
 DEBUG = True
@@ -63,8 +64,8 @@ def log(msg, **kwargs):
 
 def main(): 
     log("Loading Track")
-    n_samples = 100
-    track = load_or_create("track.pkl", Track, "Mazda MX-5", "buckmore", "curvature", 100)
+    n_samples = 1000
+    track = load_or_create("track.pkl", Track, "Mazda MX-5", "buckmore", "curvature", 1000)
     path = track.optimal_path
 
     # plot_dist(track, "left")
@@ -82,8 +83,8 @@ def main():
 
     # Prepare x0
     s0, n0, mu0 = 0., 0., 0.
-    vx0, vy0, r0 = 0.1, 0.1, 0.
-    steer_angle0, throttle0 = 0., 1.
+    vx0, vy0, r0 = 0.1, 0.0, 0.
+    steer_angle0, throttle0 = 0., 0.1
     x0 = np.reshape([s0, n0, mu0, vx0, vy0, r0, steer_angle0, throttle0], (-1, 1))
 
     # simualtion
@@ -93,14 +94,16 @@ def main():
     sim.x0 = x0
     controller.mpc.x0 = x0 
     controller.mpc.set_initial_guess()
-
+    estimator = do_mpc.estimator.StateFeedback(model.model)
+    estimator.x0 = x0
 
     fig, ax, sim_graphics = simulator.plot_results()
     u0 = np.zeros((2,1))
-    for i in range(10):
-        log(f"simulation step: {i}")
+    for i in range(20):
+        log(f"\n---------------------------\nsimulation step: {i}\n---------------------------\n")
         u0 = controller.mpc.make_step(x0)
-        sim.make_step(u0)
+        y = sim.make_step(u0)
+        x0 = estimator.make_step(y)
 
     log("Plotting results...")
     sim_graphics.plot_results()

@@ -27,22 +27,33 @@ class Simulator:
 
         sim_graphics = do_mpc.graphics.Graphics(self.simulator.data)
 
-        fig, ax = plt.subplots(3, sharex=True, figsize=(16,9))
+        fig, ax = plt.subplots(9, sharex=True, figsize=(16,9))
         fig.align_ylabels()
 
         # Plot the position on curve s, n, mu
         sim_graphics.add_line(var_type='_x', var_name='s', axis=ax[0])
-        sim_graphics.add_line(var_type='_x', var_name='n', axis=ax[0])
-        sim_graphics.add_line(var_type='_x', var_name='mu', axis=ax[0])
+        sim_graphics.add_line(var_type='_x', var_name='n', axis=ax[1])
+        sim_graphics.add_line(var_type='_x', var_name='mu', axis=ax[2])
 
         # Plot velocities
-        sim_graphics.add_line(var_type='_x', var_name='vx', axis=ax[1])
-        sim_graphics.add_line(var_type='_x', var_name='vy', axis=ax[1])
+        sim_graphics.add_line(var_type='_x', var_name='vx', axis=ax[3])
+        sim_graphics.add_line(var_type='_x', var_name='vy', axis=ax[4])
 
-        ax[0].set_ylabel('position on a curve [s, n, mu]')
-        ax[1].set_ylabel('speed in x and y [m/s]')
-        ax[2].set_ylabel('inputs [angle, T]')
-        ax[2].set_xlabel('time [s]')
+        sim_graphics.add_line(var_type='_x', var_name='steering_angle', axis=ax[5])
+        sim_graphics.add_line(var_type='_x', var_name='throttle', axis=ax[6])
+        sim_graphics.add_line(var_type='_u', var_name='steering_angle_change', axis=ax[7])
+        sim_graphics.add_line(var_type='_u', var_name='throttle_change', axis=ax[8])
+
+        ax[0].set_ylabel('s')
+        ax[1].set_ylabel('n')
+        ax[2].set_ylabel('mu')
+        ax[3].set_ylabel('vx')
+        ax[4].set_ylabel('vy')
+        ax[5].set_ylabel('delta')
+        ax[6].set_xlabel('T')
+        ax[7].set_ylabel('ddelta')
+        ax[8].set_xlabel('dT')
+
         return fig, ax, sim_graphics
     
     # TODO move to track.py probably
