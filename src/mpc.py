@@ -65,7 +65,7 @@ def log(msg, **kwargs):
 def main(): 
     log("Loading Track")
     n_samples = 1000
-    track = load_or_create("track.pkl", Track, "Mazda MX-5", "buckmore", "curvature", 1000)
+    track = load_or_create("track.pkl", Track, "Mazda MX-5", "buckmore", "curvature", n_samples)
     path = track.optimal_path
 
     # plot_dist(track, "left")
