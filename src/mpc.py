@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 import os
+import json
 
 from mpc.track import Track as Track
 from mpc.model import VehicleModel
@@ -99,11 +100,36 @@ def main():
 
     fig, ax, sim_graphics = simulator.plot_results()
     u0 = np.zeros((2,1))
-    for i in range(20):
+    
+    steps = 20
+    # Prepare variables for saving states, contorl to json
+    X = np.zeros((steps + 1, *x0.shape))
+    X[0] = x0
+    
+    Y = np.zeros((steps + 1, *x0.shape))
+    Y[0] = x0
+
+    U = np.zeros((steps + 1, *u0.shape))
+    U[0] = u0
+
+    for i in range(1, steps + 1):
         log(f"\n---------------------------\nsimulation step: {i}\n---------------------------\n")
         u0 = controller.mpc.make_step(x0)
         y = sim.make_step(u0)
         x0 = estimator.make_step(y)
+        X[i] = x0
+        Y[i] = y
+        U[i] = u0
+
+    # Save to json
+    with open('sim_results.json', 'w') as f:
+        data = {'x': X.tolist(), 'y': Y.tolist(), 'u': U.tolist()}
+        json.dump(data, f)
+    
+    # Read json
+    with open('sim_results.json', 'r') as f:
+        data = json.load(f)
+        print(np.array(data['x']), np.array(data['y']), np.array(data['u']), sep='\n')
 
     log("Plotting results...")
     sim_graphics.plot_results()
