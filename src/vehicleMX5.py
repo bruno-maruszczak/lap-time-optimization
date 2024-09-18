@@ -20,7 +20,7 @@ class VehicleMX5:
         """maximum accelerating force in longitudinal direction"""
         return (self.T * self.C_m) - self.Cr_0 - (self.Cr_2 * (velocity**2))
 
-    def traction(self, v, k, lam=1.0):
+    def traction(self, v, k, lam=2.0):
         """Determine remaining traction when negotiating a corner."""
         # vx is velocity in longitudinal direction, it is our v_resultant in path coordinate system
         #B = (self.B_f + self.B_r)*0.5

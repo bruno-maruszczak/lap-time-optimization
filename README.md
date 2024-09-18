@@ -108,6 +108,6 @@ Na końcu upisu przedstawiono także wykresy trajektorii, w celu wizualizacji.
 ![nonlinear](./data/plots/buckmore/nonlinear/trajectory.png) -->
 
 ### Curvature MX5 (drugi model)
-![curvature](./data/plots/MX-5/buckmore/compromise/trajectory.png)
+![curvature](./data/plots/Mazda MX-5/buckmore/curvature/trajectory.png)
 ### Bayesian MX5
-![bayesian](./data/plots/MX-5/buckmore/bayesian/trajectory.png)
+![bayesian](./data/plots/Mazda MX-5/buckmore/bayesian/trajectory.png)

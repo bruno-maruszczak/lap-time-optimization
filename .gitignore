@@ -5,5 +5,4 @@ lap_time_venv
 /out
 /img
 .vscode
-/data/plots
 *.pkl
