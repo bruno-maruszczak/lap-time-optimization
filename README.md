@@ -97,17 +97,17 @@ Na końcu upisu przedstawiono także wykresy trajektorii, w celu wizualizacji.
 
 ## Wykresy:
 ### Curvature
-![curvature](./data/plots/buckmore/tbr18/curvature/trajectory.png)
+![curvature](./data/plots/tbr18/buckmore/curvature/trajectory.png)
 ### Compromise
-![compromise](./data/plots/buckmore/tbr18/compromise/trajectory.png)
+![compromise](./data/plots/tbr18/buckmore/compromise/trajectory.png)
 ### Lap Time
-![laptime](./data/plots/buckmore/tbr18/laptime/trajectory.png)
+![laptime](./data/plots/tbr18/buckmore/laptime/trajectory.png)
 ### Bayesian
-![bayesian](./data/plots/buckmore/tbr18/bayesian/trajectory.png)
+![bayesian](./data/plots/tbr18/buckmore/bayesian/trajectory.png)
 <!-- ### Non-linear
 ![nonlinear](./data/plots/buckmore/nonlinear/trajectory.png) -->
 
 ### Curvature MX5 (drugi model)
-![curvature](./data/plots/buckmore/MX-5/compromise/trajectory.png)
+![curvature](./data/plots/MX-5/buckmore/compromise/trajectory.png)
 ### Bayesian MX5
-![bayesian](./data/plots/buckmore/MX-5/bayesian/trajectory.png)
+![bayesian](./data/plots/MX-5/buckmore/bayesian/trajectory.png)
