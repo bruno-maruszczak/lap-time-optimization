@@ -138,16 +138,17 @@ class Track:
         closest_points = [(x[i], y[i]) for i in sorted_indices[:]]
 
         # Choose the one closer to the (x0, y0) point on the curve
+        width = 10
         closest_point = None
         min_distance = float('inf')
         for point in closest_points:
             dist = np.hypot(point[0] - x0, point[1] - y0)
-            if dist < min_distance and dist <= 10: 
+            if dist < min_distance and dist <= width: 
                 min_distance = dist
                 closest_point = point
 
         if closest_point is None:
-            raise ValueError("No point found within the radius of 4.5")
+            raise ValueError("No point found within the radius of {width}")
 
         distance = min_distance
 
