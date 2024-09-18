@@ -17,16 +17,24 @@ class VehicleMX5:
         print("[ Imported {} ]".format(self.name))
 
     def engine_force(self, velocity, gear=None):
-        """maximum engine force in longitudinal direction"""
-        F_M = self.C_m * self.T
-        return F_M
+        """maximum accelerating force in longitudinal direction"""
+        return (self.T * self.C_m) - self.Cr_0 - (self.Cr_2 * (velocity**2))
 
-    def traction(self, velocity, k):
+    def traction(self, v, k, lam=1.0):
         """Determine remaining traction when negotiating a corner."""
         # vx is velocity in longitudinal direction, it is our v_resultant in path coordinate system
-        f_long = (self.T * self.C_m) - self.Cr_0 - (self.Cr_2 * (velocity**2))
-        # print(f"traction: {f_long}")
-        return f_long
+        #B = (self.B_f + self.B_r)*0.5
+        #C = (self.C_f + self.C_r)*0.5
+        D = (self.D_f + self.D_r)*0.5
+        
+        #alpha = np.arctan(0.0)
+        Fn = self.mass * GRAV
+        #F_lat = Fn * D * np.sin(C * np.arctan(B * alpha))
+        F_max = lam*D*Fn
+        F_lat = self.mass * v*v * k
+        if F_max <= F_lat:
+            return 0
+        return sqrt(F_max**2 - F_lat**2)
     
     def remove_comments(self, json_str):
         # Remove single-line comments

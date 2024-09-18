@@ -1,6 +1,6 @@
 import numpy as np
 from math import sqrt
-from vehicle_2 import Vehicle2
+
 
 GRAV = 9.81  # ms^-2
 
@@ -12,7 +12,7 @@ class VelocityProfileMX5:
     Stores and generates a velocity profile for a given path and vehicle.
     """
 
-    def __init__(self, vehicle:Vehicle2, s, k, s_max=None):
+    def __init__(self, vehicle, s, k, s_max=None):
         """
         Generate a velocity profile for the given vehicle and path parameters.
         :s: and :k: should NOT include the overlapping element for closed paths.
@@ -28,8 +28,9 @@ class VelocityProfileMX5:
 
     def limit_local_velocities(self, k):
         """simple local limit for velocity"""
-        # calculated from the formula F_lat = F_friction = m * v^2 / r = mi * m * g => v = sqrt(g * r / mi)
-        self.v_local = np.sqrt(self.vehicle.friction_coef * GRAV / k)
+        D = 0.5 * (self.vehicle.D_f + self.vehicle.D_r)
+        # calculated from the formula F_lat = F_friction = m * v^2 / r = mi * m * g => v = sqrt(g * r * mi)
+        self.v_local = np.sqrt(D * GRAV / k)
         # print(f"v_local: {self.v_local}")
 
     def limit_acceleration(self, k_in):
@@ -72,7 +73,7 @@ class VelocityProfileMX5:
             if wrap and self.s_max is None:
                 continue
             if v[i] > v[i-1]:
-                traction = self.vehicle.traction(v[i-1])
+                traction = self.vehicle.traction(v[i-1], k_in)
                 
                 decel = traction / self.vehicle.mass
                 ds = self.s_max - s[i] if wrap else s[i-1] - s[i]
