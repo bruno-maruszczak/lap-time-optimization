@@ -29,7 +29,7 @@ python3 src/__main__.py ./data/tracks/buckmore.json ./data/vehicles/tbr18.json  
 python3 src/__main__.py ./data/tracks/buckmore.json ./data/vehicles/tbr18.json 0.8 --bayes --plot-all
 ```
 First argument chooses track, second vehicle (two models implemented, tbr18 and MX5), third is a float value, depicting how much track 
-wehicle can use, where 1 means whole track to the boundries from left and right, and 0 means only narrow mid part of track. Next choose optimisation method from {--bayes, --curvature, --compromise, --laptime} and what to plot. 
+wehicle can use, where 1 means whole track to the boundries from left and right, and 0 means only narrow mid part of track. Next choose optimisation method from {--bayes, --curvature, --compromise, --laptime} and what to plot. (On windows watch out for "\" and "/")
 
 ### To run the controller:
 ```bash
