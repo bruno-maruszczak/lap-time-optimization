@@ -70,10 +70,18 @@ Wyniki przedstawiono w tabeli:
 Na końcu upisu przedstawiono także wykresy trajektorii, w celu wizualizacji. 
 
 #### Wyniki dla toru buckmore i modelu MX5
-<!-- TODO --> tabelka
+|Method:       |   curvature   | Compromise | Lap Time | Bayesian Optimisation |
+| ----------- |:-------------:|:----------:|:----------:|:-------------:|
+|Lap time      |     49.172    |   47.730  |   53.648    |     48.056    |
+|Run time      |     5.301     |   101.786  |   65.495    |     27.840    |
+|Path Length   |    856.095    |   810.150 |   845.530   |     806.397   |
+|Max velocity  |     24.783    |   23.753  |   24.186    |     25.615    |
+|Mean velocity |     18.000    |   17.525  |   16.323    |     17.506    |
+
+W celu uproszczenia analizy wszystkie wyniki i wykresy były tworzone dla toru **buckmore**. 
 
 ### Model i kontroler
-
+Wszystkie metody 
 1. Zaimplementowano nowy model. Niestety różnice pomiędzy wcześniej już istniejącym okazały się bardzo duże. Nie można było jednoznacznie przeliczyć wartości z jednego na drugiego. Do dostosowania do projektu zastosowano metody wyliczające ograniczenia. 
 
 2. Wyznaczono optymalną trajektorię przy pomocy jednej z metod.
