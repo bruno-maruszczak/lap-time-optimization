@@ -96,7 +96,7 @@ def main():
     # create_model
     
     log("Loading vehicle model...")
-    model = VehicleModel(os.path.join(os.getcwd(), "data", "vehicles", "MX5.json"), track)
+    model = VehicleModel('./data/vehicles/MX5.json', track)
 
     # create controller
     log("Creating MPC controller...")
