@@ -58,8 +58,8 @@ class Visualiser:
             y += n * normal_vector[1]
 
             # calculate the speed vector
-            vx = vx * tangent_vector
-            vy = vy * normal_vector
+            vx = vx * np.cos(mu) - vy * np.sin(mu)
+            vy = vx * np.sin(mu) + vy * np.cos(mu)
 
             velocity = vx + vy
 
