@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import pickle
 import os
 import json
+import argparse
+from enum import IntEnum, unique
 
 from mpc.track import Track as Track
 from mpc.model import VehicleModel
@@ -15,33 +17,49 @@ import do_mpc
 import casadi as ca
 DEBUG = True
 
-def load_or_create(pickle_file, cls, *constructor_args, **constructor_kwargs):
-    """
-    Load an object from a pickle file or create a new one if the file does not exist.
+@unique
+class Method(IntEnum):
+    CURVATURE = 0
+    COMPROMISE = 1
+    DIRECT = 2
+    BAYES = 3
 
-    Args:
-        pickle_file (str): Path to the pickle file.
-        cls (type): The class of the object to create.
-        *constructor_args: Positional arguments to pass to the class constructor.
-        **constructor_kwargs: Keyword arguments to pass to the class constructor.
+parser = argparse.ArgumentParser(description='Choosing race path to follow')
+methods = parser.add_argument_group(
+    'generation methods').add_mutually_exclusive_group(required=True)
+methods.add_argument('--curvature',
+                     action='store_const', dest='method', const=Method.CURVATURE,
+                     help='curvature path'
+                     )
+methods.add_argument('--compromise',
+                     action='store_const', dest='method', const=Method.COMPROMISE,
+                     help='an optimal length-curvature compromise path'
+                     )
+methods.add_argument('--laptime',
+                     action='store_const', dest='method', const=Method.DIRECT,
+                     help='path computed with direct lap time'
+                     )
+methods.add_argument('--bayes',
+                     action='store_const', dest='method', const=Method.BAYES,
+                     help='optimal path via bayesian optimisation'
+                     )
 
-    Returns:
-        object: The loaded or newly created object.
-    """
-    if os.path.exists(pickle_file):
-        # Load the object from the pickle file
-        with open(pickle_file, 'rb') as f:
-            obj = pickle.load(f)
-            print("Loaded object from pickle.")
-    else:
-        # Create a new object
-        obj = cls(*constructor_args, **constructor_kwargs)
-        # Save the object to the pickle file
-        with open(pickle_file, 'wb') as f:
-            pickle.dump(obj, f)
-            print("Saved object to pickle.")
-    
-    return obj
+args = parser.parse_args()
+
+if args.method is Method.CURVATURE:
+    print("[ Path method: curvature ]")
+    method = "curvature"
+elif args.method is Method.COMPROMISE:
+    print("[ Path method: compromise ]")
+    method = "compromise"
+elif args.method is Method.DIRECT:
+    print("[ Path method: compromise ]")
+    method = "compromise"
+elif args.method is Method.BAYES:
+    print("[ Path method: BAYES ]")
+    method = "bayesian"
+else:
+    raise ValueError("Did not recognise args.method {}".format(args.method))
 
 def plot_dist(track : Track, side):
     """
@@ -68,7 +86,7 @@ def log(msg, **kwargs):
 def main(): 
     log("Loading Track")
     n_samples = 1000
-    track = load_or_create("track.pkl", Track, "Mazda MX-5", "buckmore", "curvature", n_samples)
+    track = Track("MX-5", "buckmore", method, n_samples)
     path = track.optimal_path
 
 
@@ -78,7 +96,7 @@ def main():
     # create_model
     
     log("Loading vehicle model...")
-    model = load_or_create("model.pkl", VehicleModel, './data/vehicles/MX5.json', track)
+    model = VehicleModel('./data/vehicles/MX5.json', track)
 
     # create controller
     log("Creating MPC controller...")
