@@ -11,7 +11,9 @@ class Visualiser:
         self.track = track
         
         self.fig, self.ax = plt.subplots(figsize=(16, 9))
-        #self.sim_data = self.read_sim_data(json_path)
+        self.sim_data = self.read_sim_data(json_path)
+
+        self.get_vehicle_positions(self.sim_data)
 
 
     def plot_optimal_path(self):
@@ -31,12 +33,27 @@ class Visualiser:
 
     def get_vehicle_positions(self, data):
         n = len(data['x'])
-        positions = np.zeros(2, n)
+        positions = np.zeros((n, 2))
 
-        # setup first position
-        positions[0] = self.track.optimal_path.position(s = 0.)
+        states = data['x']
+        for i, state in enumerate(states):
+            s, n, mu, vx, vy, r, _, _ = state
+            u = self.track.optimal_path.find_u_given_s(s)
+            spline = self.track.optimal_path.spline
+            x, y = splev(u, spline)
+            dx, dy = splev(u, spline, der=1)
 
-        X = data['x']
-        for i,x in enumerate(X):
-            pass
+            tangent_length = np.hypot(dx, dy)
+            tangent_vector = np.array([dx, dy]) / tangent_length
+
+            # Compute normal vector (rotate tangent by 90 degrees)
+            normal_vector = np.array([-tangent_vector[1], tangent_vector[0]])
+
+            # Compute the new point (x, y) based on deviation n along the normal vector
+            x += n * normal_vector[0]
+            y += n * normal_vector[1]
+            positions[i, :] = np.array([x, y]).ravel()
+        
+        self.ax.scatter(positions[:, 0], positions[:, 1])
+
 
