@@ -32,8 +32,8 @@ class Path:
             return self.controls
         x, y = splev(s, self.spline)
         return np.array([x, y])
-    
-    def curvature(self, u=None):
+
+    def curvature(self, u=None, return_absolute_value=True):
         """
         Calculate curvature of spline at given parameter u value
         
@@ -54,10 +54,12 @@ class Path:
         d2x_du2, d2y_du2 = splev(u, self.spline, der=2)
         
         # Curvature formula: kappa(u) = |dx/du * d2y/du2 - dy/du * d2x/du2| / (dx/du^2 + dy/du^2)^(3/2)
-        curvature = np.abs(dx_du * d2y_du2 - dy_du * d2x_du2) / (dx_du**2 + dy_du**2)**(3/2)
-        
-        return curvature
 
+        curvature = (dx_du * d2y_du2 - dy_du * d2x_du2) / (dx_du**2 + dy_du**2)**(3/2)
+
+        
+        return np.abs(curvature) if return_absolute_value else curvature
+    
     def gamma2(self, u=None):
         """Returns the sum of the squares of sample curvatures, Gamma^2."""
         if u is None:
@@ -190,7 +192,7 @@ class ControllerReferencePath(Path):
         u = self.find_u_given_s(s)
         
         # Calculate curvature at the interpolated u value
-        curvature = self.curvature(u)
+        curvature = self.curvature(u, return_absolute_value=False)
         
         return curvature
 
