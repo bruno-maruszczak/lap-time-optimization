@@ -122,7 +122,7 @@ def main():
     fig, ax, sim_graphics = simulator.plot_results()
     u0 = np.zeros((2,1))
     
-    steps = 20
+    steps = 1000
     # Prepare variables for saving states, contorl to json
     X = np.zeros((steps + 1, *x0.shape))
     X[0] = x0
@@ -148,12 +148,6 @@ def main():
         json.dump(data, f)
     
     visualiser = Visualiser(track, 'sim_results.json')
-    plt.show()
-
-    # Read json
-    with open('sim_results.json', 'r') as f:
-        data = json.load(f)
-        print(np.array(data['x']), np.array(data['y']), np.array(data['u']), sep='\n')
 
     log("Plotting results...")
     sim_graphics.plot_results()

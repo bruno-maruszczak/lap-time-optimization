@@ -58,15 +58,17 @@ class Visualiser:
             y += n * normal_vector[1]
 
             # calculate the speed vector
-            vx = vx * normal_vector
-            vy = vy * tangent_vector
+            vx = vx * tangent_vector
+            vy = vy * normal_vector
 
             velocity = vx + vy
 
             positions[i, :] = np.array([x, y]).ravel()
             velocities[i, :] = velocity.ravel()
-        
-        for position, velocity in zip(positions, velocities):
-            self.ax.quiver(position[0], position[1], velocity[0], velocity[1], angles='xy', scale_units='xy', scale=1)
+
+        for i in range(0, len(positions), 10): 
+            position = positions[i]
+            velocity = velocities[i]
+            self.ax.quiver(position[0], position[1], velocity[0], velocity[1], angles='xy', scale_units='xy', scale=1, color="blue")
 
         self.ax.scatter(positions[:, 0], positions[:, 1])
