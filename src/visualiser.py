@@ -37,6 +37,7 @@ class Visualiser:
     def get_vehicle_positions(self, data):
         n = len(data['x'])
         positions = np.zeros((n, 2))
+        velocities = np.zeros((n, 2))
 
         states = data['x']
         for i, state in enumerate(states):
@@ -55,6 +56,17 @@ class Visualiser:
             # Compute the new point (x, y) based on deviation n along the normal vector
             x += n * normal_vector[0]
             y += n * normal_vector[1]
+
+            # calculate the speed vector
+            vx = vx * normal_vector
+            vy = vy * tangent_vector
+
+            velocity = vx + vy
+
             positions[i, :] = np.array([x, y]).ravel()
+            velocities[i, :] = velocity.ravel()
         
+        for position, velocity in zip(positions, velocities):
+            self.ax.quiver(position[0], position[1], velocity[0], velocity[1], angles='xy', scale_units='xy', scale=1)
+
         self.ax.scatter(positions[:, 0], positions[:, 1])

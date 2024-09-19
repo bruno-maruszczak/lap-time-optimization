@@ -105,7 +105,7 @@ def main():
 
     # Prepare x0
     s0, n0, mu0 = 0., 0., 0.
-    vx0, vy0, r0 = 0.1, 0.0, 0.
+    vx0, vy0, r0 = 5.0, 0.0, 0.
     steer_angle0, throttle0 = 0., 0.1
     x0 = np.reshape([s0, n0, mu0, vx0, vy0, r0, steer_angle0, throttle0], (-1, 1))
 
@@ -156,9 +156,9 @@ def main():
         print(np.array(data['x']), np.array(data['y']), np.array(data['u']), sep='\n')
 
     log("Plotting results...")
-    # sim_graphics.plot_results()
-    # # Reset the limits on all axes in graphic to show the data.
-    # sim_graphics.reset_axes()
+    sim_graphics.plot_results()
+    # Reset the limits on all axes in graphic to show the data.
+    sim_graphics.reset_axes()
     # Show the figure:
     plt.show()
 
