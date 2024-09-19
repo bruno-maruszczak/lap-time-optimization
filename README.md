@@ -1,5 +1,8 @@
 Based on [this repository](https://github.com/joedavison17/dissertation/)
 
+  
+  
+
 # Lap time optimisation and mpc control
 The project aims to generate optimal trajectories for a car using curvilinear bicycle model, simulate the model's behavior, and compute the control signals required to follow the trajectory. This is achieved using the do_mpc library in python, which is designed for model predictive control (MPC) applications.
 
