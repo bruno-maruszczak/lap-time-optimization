@@ -50,9 +50,9 @@ class Simulator:
         ax[3].set_ylabel('vx')
         ax[4].set_ylabel('vy')
         ax[5].set_ylabel('delta')
-        ax[6].set_xlabel('T')
+        ax[6].set_ylabel('T')
         ax[7].set_ylabel('ddelta')
-        ax[8].set_xlabel('dT')
+        ax[8].set_ylabel('dT')
 
         return fig, ax, sim_graphics
     

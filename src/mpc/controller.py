@@ -17,7 +17,7 @@ class Controller:
             't_step' : t_step,
             'n_robust' : n_robust,
             'store_full_solution' : False,
-            'nlpsol_opts': {'ipopt.max_iter': 800 }
+            'nlpsol_opts': {'ipopt.max_iter': 1000 }
         }
         self.mpc.set_param(**setup_mpc)    
 
