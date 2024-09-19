@@ -8,6 +8,8 @@ from mpc.track import Track as Track
 from mpc.model import VehicleModel
 from mpc.controller import Controller
 from mpc.simulator import Simulator
+from visualiser import Visualiser
+
 import do_mpc
 
 import casadi as ca
@@ -68,6 +70,10 @@ def main():
     n_samples = 1000
     track = load_or_create("track.pkl", Track, "Mazda MX-5", "buckmore", "curvature", n_samples)
     path = track.optimal_path
+
+    visualiser = Visualiser(track, None)
+    visualiser.plot_optimal_path()
+    plt.show()
 
     # plot_dist(track, "left")
     # plt.show()
