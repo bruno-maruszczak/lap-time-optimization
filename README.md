@@ -33,7 +33,7 @@ wehicle can use, where 1 means whole track to the boundries from left and right,
 
 ### To run the controller:
 ```bash
-python3 src/mpc.py
+python3 src/mpc.py --laptime
 ```
 
 *\[PL\]*
