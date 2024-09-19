@@ -25,14 +25,14 @@ class Path:
         self.spline, _ = splprep(controls, u=self.dists, k=3, s=0, per=self.closed)
         self.length = self.dists[-1]
 
-    
+
     def position(self, s=None):
         """Returns x-y coordinates of sample points."""
         if s is None:
             return self.controls
         x, y = splev(s, self.spline)
         return np.array([x, y])
-
+    
     def curvature(self, u=None):
         """
         Calculate curvature of spline at given parameter u value
