@@ -71,9 +71,6 @@ def main():
     track = load_or_create("track.pkl", Track, "Mazda MX-5", "buckmore", "curvature", n_samples)
     path = track.optimal_path
 
-    visualiser = Visualiser(track, None)
-    visualiser.plot_optimal_path()
-    plt.show()
 
     # plot_dist(track, "left")
     # plt.show()
@@ -132,6 +129,10 @@ def main():
         data = {'x': X.tolist(), 'y': Y.tolist(), 'u': U.tolist()}
         json.dump(data, f)
     
+    visualiser = Visualiser(track, 'sim_results.json')
+    visualiser.plot_optimal_path()
+    plt.show()
+
     # Read json
     with open('sim_results.json', 'r') as f:
         data = json.load(f)
