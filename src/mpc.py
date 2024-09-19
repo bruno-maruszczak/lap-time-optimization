@@ -105,8 +105,8 @@ def main():
 
     # Prepare x0
     s0, n0, mu0 = 0., 0., 0.
-    vx0, vy0, r0 = 5.0, 0.0, 0.
-    steer_angle0, throttle0 = 0., 0.1
+    vx0, vy0, r0 = 5.0, 0., 0.
+    steer_angle0, throttle0 = 0., 0.
     x0 = np.reshape([s0, n0, mu0, vx0, vy0, r0, steer_angle0, throttle0], (-1, 1))
 
     # simualtion
@@ -122,7 +122,7 @@ def main():
     fig, ax, sim_graphics = simulator.plot_results()
     u0 = np.zeros((2,1))
     
-    steps = 1000
+    steps = 500
     # Prepare variables for saving states, contorl to json
     X = np.zeros((steps + 1, *x0.shape))
     X[0] = x0
@@ -148,6 +148,11 @@ def main():
         json.dump(data, f)
     
     visualiser = Visualiser(track, 'sim_results.json')
+
+    # # Read json
+    # with open('sim_results.json', 'r') as f:
+    #     data = json.load(f)
+    #     print(np.array(data['x']), np.array(data['y']), np.array(data['u']), sep='\n')
 
     log("Plotting results...")
     sim_graphics.plot_results()
