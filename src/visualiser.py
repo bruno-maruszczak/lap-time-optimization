@@ -55,5 +55,3 @@ class Visualiser:
             positions[i, :] = np.array([x, y]).ravel()
         
         self.ax.scatter(positions[:, 0], positions[:, 1])
-
-
