@@ -77,13 +77,6 @@ We use a curvilinear bicycle model to simulate a car, based on an article: [Opti
 In summary, The model operates in a curvilinear coordinate system relative to a reference path, such as a race track centerline. This model includes dynamic force laws and represents vehicle states like position along the path (arc-length), lateral deviation, and heading angle.
 Simplfied Pacejka tire model is used to calculate the lateral tire forces. <br />
 
-#### Problems with the model
-> **Important:**  
-> During tests, we found some unexpected behaviour, where without sending any control signals and initial speed `ex. vx = 5.0`, the car suddenly turns around 180 degrees, after about 1 second of simulation.
-> We were unable to find the cause of this error, however the cause seems to be hidden somewhere in lateral Tire forces equations.
-
-TODO, dodac wykresy symulacji
-
 <hr />
 
 ### Model predictive control
@@ -91,7 +84,7 @@ We used **do-mpc library** that implements a mpc controller for this part of the
 #### Problems with the MPC
 We were unable to get good results using the controller, due to error on modelling of the system.
 The optimizer takes a really long time to calculate the control signals (a few hours of runtime, for a few seconds of simulation), consuming a lot of RAM (approaching 16GBs)<br />
-There are two possible reasons for this behaviour, the first being a bad implementation of the model, the second being:
+We think the reason is the way we calculate the curvature of the trajectory symbolically.
 ##### Problem with calculating curvature of the trajectory
 The do_mpc rquirest the model to be writtne using symbolix expressions (using casadi library as a backend). In our project, we utilize B-splines to define the trajectory that our vehicle will follow, with these splines parameterized by a variable `u`. To effectively plan and control the vehicle's path, we need a symbolic expression for the curvature at a given arc-length `s`. <br />
 However, directly obtaining this symbolic expression is challenging because there is no straightforward translation between the parameter `u` and arc-length `s`. <br />
