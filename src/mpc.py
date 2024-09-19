@@ -148,7 +148,6 @@ def main():
         json.dump(data, f)
     
     visualiser = Visualiser(track, 'sim_results.json')
-    visualiser.plot_optimal_path()
     plt.show()
 
     # Read json

@@ -11,9 +11,12 @@ class Visualiser:
         self.track = track
         
         self.fig, self.ax = plt.subplots(figsize=(16, 9))
+        self.fig.suptitle("Visualiser")
         self.sim_data = self.read_sim_data(json_path)
 
-        self.get_vehicle_positions(self.sim_data)
+        self.plot_optimal_path()
+        self.plot_track()
+        #self.get_vehicle_positions(self.sim_data)
 
 
     def plot_optimal_path(self):
