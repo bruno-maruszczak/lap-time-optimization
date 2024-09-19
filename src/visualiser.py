@@ -16,11 +16,11 @@ class Visualiser:
 
         self.plot_optimal_path()
         self.plot_track()
-        #self.get_vehicle_positions(self.sim_data)
+        self.get_vehicle_positions(self.sim_data)
 
 
     def plot_optimal_path(self):
-        self.ax.plot(self.track.optimal_path.get_sample_points(), 'g')
+        self.ax.plot(*self.track.optimal_path.get_sample_points(), 'g')
 
     def plot_track(self):
         self.ax.plot(*self.track.left_bound.get_sample_points(), 'black')
