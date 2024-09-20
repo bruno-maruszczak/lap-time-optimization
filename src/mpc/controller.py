@@ -28,7 +28,7 @@ class Controller:
         # q_n is a cost for deviating from the optimal path (in perpendicular to path direction)
         # q_mu is a cost for a heading that deviates from the optimal path
         # q_B penalizes the difference between the kinematic and dynamic side slip angle.
-        q_n, q_mu, q_B = 1e-2, 1e-2, 1e-2
+        q_n, q_mu, q_B = 0.5, 3.0, 1e-2
         self.set_constraints(rho, alpha)
         self.set_objective(control_costs, q_n, q_mu, q_B)
         self.mpc.setup()
@@ -47,9 +47,10 @@ class Controller:
         mu = self.mpc_model.x['mu']
 
         # mterm - Add algebraic constraints here
-        # lterm = 1e-2*ca.exp(-sdot)/np.e + q_n*(n**2) + q_mu*(mu**2) + self.model.B(q_B) # Use to recreate plot results
-        lterm = -self.t_step*(sdot) + q_n*(n**2) + q_mu*(mu**2) + self.model.B(q_B)
-        mterm = ca.SX(0)
+        lterm = 1.0*ca.exp(-sdot)/np.e + q_n*(n**2) + q_mu*(mu**2) + self.model.B(q_B) # Use to recreate plot results
+        # lterm = -self.t_step*(sdot) + q_n*(n**2) + q_mu*(mu**2) + self.model.B(q_B)
+        # mterm = ca.SX(0)
+        mterm = lterm
         self.mpc.set_objective(lterm=lterm, mterm=mterm)
 
     def set_constraints(self, rho, alpha):
@@ -68,8 +69,8 @@ class Controller:
         self.mpc.set_nl_cons('right_dist_cons', right, 0.)
 
         front, back = self.model.get_traction_ellipse_constraint(throttle, vx, vy, r, steering_angle, rho, alpha)
-        self.mpc.set_nl_cons('front_traction_ellipse_cons', front, 0., soft_constraint=False)
-        self.mpc.set_nl_cons('back_traction_ellipse_cons', back, 0., soft_constraint=False)
+        self.mpc.set_nl_cons('front_traction_ellipse_cons', front, 0., soft_constraint=True)
+        self.mpc.set_nl_cons('back_traction_ellipse_cons', back, 0., soft_constraint=True)
 
         # TODO Set constraints for velocities, from calculated optimal max_velocities. 
         not_set = 0.

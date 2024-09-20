@@ -97,7 +97,18 @@ However, obtaining this symbolic expression directly is challenging because ther
 As a solution, we sample the curvature at a given arc-length s, and generate a look-up table, from which we generate a symbolic expression using linear piecewise approximation.
 Resulting expression, due to being a complex piecewise expression, and by nature not a smooth function, may be bad for optimization algorithms. Arc-length parametrized spline should be used to approximate the track in the place of B-spline.
 
-### Results
+#### Results:
+
+![Close-up](./data/plots/MPC/close_up.png)
+##### State-space chart
+![States](./data/plots/MPC/state.png)
+##### Tire model state chart
+![Tire forces](./data/plots/MPC/tire_forces.png)
+<hr/>
+![Global view](./data/plots/MPC/full_scale.png)
+
+
+### Raceline optimization results
 
 #### Results for trajectory optimization of Buckmore track, tbr18 model
 |Method:       |   curvature   | Compromise | Lap Time | Bayesian Optimisation |  non-linear optimisation |

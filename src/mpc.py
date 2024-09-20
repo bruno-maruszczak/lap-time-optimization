@@ -105,8 +105,8 @@ def main():
 
     # Prepare x0
     s0, n0, mu0 = 0., 0., 0.
-    vx0, vy0, r0 = 8.0, 0.1, 0.
-    steer_angle0, throttle0 = 0., 0.
+    vx0, vy0, r0 = 5.0, 0.0, 0.
+    steer_angle0, throttle0 = 0., 0.1
     x0 = np.reshape([s0, n0, mu0, vx0, vy0, r0, steer_angle0, throttle0], (-1, 1))
 
     # simualtion
@@ -122,8 +122,8 @@ def main():
     fig, ax, sim_graphics = simulator.plot_results()
     u0 = np.array([[0.0], [0.0]])
     
-    steps = 100
-    # Prepare variables for saving states, control to json
+    steps = 25
+    # Prepare variables for saving states, contorl to json
     X = np.zeros((steps + 1, *x0.shape))
     X[0] = x0
     
