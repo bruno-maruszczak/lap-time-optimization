@@ -86,24 +86,26 @@ Wszystkie metody
 
 2. Wyznaczono optymalną trajektorię przy pomocy jednej z metod.
 
-<!-- TODO --> jakie jeszcze ograniczenia?
-3. Wyliczono ograniczenia na elipsę trakcji, ... . Zgodne z równaniami w dokumencie documents/model_description.pdf
+3. Wyliczono ograniczenia - elipsę trakcji, granice toru, wartości sterowania i ograniczenia aktuatorów - zgodne z równaniami w dokumencie documents/model_description.pdf
 
 4. Dodano wszystkie wartości do modelu w bibliotece do_mpc.py, wyliczono obiekty reprezentujące. 
 
-<!-- TODO --> czemu wyniki są niezadowalające?
-5. Policzono sterowanie dla stanów na torze. Niestety wyniki są niezadowalające
+5. Policzono sterowanie dla stanów na torze. Niestety wyniki nie są konsekwentnie zadowalające, poniżej zamieszczono wynik optymalizacji, która nie utknęłą w lokalnym minimum. Poprawa wyników jest możliwa, jednak wymaga dokonania przeglądu optymalizatorów nadających się lepiej do dostosowania do konkretnego zastosowania.
 
-6. Stworzono symulację w celu wizualizacji sterowania i położenia pojazdu względem toru. 
+6. Skonfigurowano symulator i napisano skrypty do wizualizacji sterowania i położenia pojazdu na tle toru.
 
 #### Wyniki:
 
-<!-- TODO --> przedstawić wyniki z MPC.
+![Close-up](./data/plots/MPC/close_up.png)
+##### Wykresy stanów modelu
+![States](./data/plots/MPC/state.png)
+##### Wykresy modelu opon
+![Tire forces](./data/plots/MPC/tire_forces.png)
+<hr/>
+![Global view](./data/plots/MPC/full_scale.png)
 
 
-
-
-## Wykresy:
+## Wykresy zoptymalizowanych trajektorii:
 ### Curvature
 ![curvature](./data/plots/tbr18/buckmore/curvature/trajectory.png)
 ### Compromise
