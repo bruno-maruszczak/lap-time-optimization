@@ -28,13 +28,6 @@ class Track:
             "right": self.create_distance_table(side="right")
         }
 
-        self.plotting_spline(self.optimal_path)
-        self.plotting_spline(self.left_bound)
-        self.plotting_spline(self.right_bound)
-        self.plot()
-        #plt.show()
-        # self.get_tangent_to_spline(self.optimal_path, self.point)
-    
     def load_path_from_json(self, filepath):
         """Load path data from a JSON file."""
         with open(filepath, 'r') as f:

@@ -10,6 +10,8 @@ from mpc.track import Track as Track
 from mpc.model import VehicleModel
 from mpc.controller import Controller
 from mpc.simulator import Simulator
+from visualiser import Visualiser
+
 import do_mpc
 
 import casadi as ca
@@ -87,6 +89,7 @@ def main():
     track = Track("MX-5", "buckmore", method, n_samples)
     path = track.optimal_path
 
+
     # plot_dist(track, "left")
     # plt.show()
 
@@ -102,8 +105,8 @@ def main():
 
     # Prepare x0
     s0, n0, mu0 = 0., 0., 0.
-    vx0, vy0, r0 = 0.1, 0.0, 0.
-    steer_angle0, throttle0 = 0., 0.1
+    vx0, vy0, r0 = 8.0, 0.1, 0.
+    steer_angle0, throttle0 = 0., 0.
     x0 = np.reshape([s0, n0, mu0, vx0, vy0, r0, steer_angle0, throttle0], (-1, 1))
 
     # simualtion
@@ -117,15 +120,19 @@ def main():
     estimator.x0 = x0
 
     fig, ax, sim_graphics = simulator.plot_results()
-    u0 = np.zeros((2,1))
+    u0 = np.array([[0.0], [0.0]])
     
-    steps = 20
-    # Prepare variables for saving states, contorl to json
+    steps = 100
+    # Prepare variables for saving states, control to json
     X = np.zeros((steps + 1, *x0.shape))
     X[0] = x0
     
     Y = np.zeros((steps + 1, *x0.shape))
     Y[0] = x0
+    Fys = np.zeros((steps+1, 2))
+    alphas = np.zeros((steps+1, 2))
+    Fys[0] = [0.0, 0.0]
+    alphas[0] = [0.0, 0.0]
 
     U = np.zeros((steps + 1, *u0.shape))
     U[0] = u0
@@ -138,16 +145,23 @@ def main():
         X[i] = x0
         Y[i] = y
         U[i] = u0
+        alpha_f, alpha_r = model.get_slip_angles(x0[3][0], x0[4][0], x0[5][0], x0[6][0])
+        alphas[i,:] = np.array([alpha_f, alpha_r])
+        Fy_f, Fy_r = model.get_lateral_forces(alpha_f, alpha_r)
+        Fys[i,:] = np.array([Fy_f, Fy_r])
+
 
     # Save to json
     with open('sim_results.json', 'w') as f:
-        data = {'x': X.tolist(), 'y': Y.tolist(), 'u': U.tolist()}
+        data = {'x': X.tolist(), 'y': Y.tolist(), 'u': U.tolist(), "Fy": Fys.tolist(), "alpha": alphas.tolist()}
         json.dump(data, f)
     
-    # Read json
-    with open('sim_results.json', 'r') as f:
-        data = json.load(f)
-        print(np.array(data['x']), np.array(data['y']), np.array(data['u']), sep='\n')
+    visualiser = Visualiser(track, 'sim_results.json')
+
+    # # Read json
+    # with open('sim_results.json', 'r') as f:
+    #     data = json.load(f)
+    #     print(np.array(data['x']), np.array(data['y']), np.array(data['u']), sep='\n')
 
     log("Plotting results...")
     sim_graphics.plot_results()

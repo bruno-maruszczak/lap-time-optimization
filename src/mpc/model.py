@@ -103,16 +103,18 @@ class VehicleModel:
         return ellipse_f, ellipse_r
 
     def get_slip_angles(self, vx, vy, r, steering_angle):
-        alpha_f = ca.atan((vy + self.length_f*r)/vx) - steering_angle
-        alpha_r = ca.atan((vy - self.length_r*r)/vx)
+        alpha_f = ca.atan2((vy + self.length_f*r),vx) - steering_angle
+        alpha_r = ca.atan2((vy - self.length_r*r),vx)
         return alpha_f, alpha_r
 
     def get_lateral_forces(self, alpha_f, alpha_r):
         Fn_f = self.length_r * self.mass * self.g / (self.length_f + self.length_r)
         Fn_r = self.length_f * self.mass * self.g / (self.length_f + self.length_r)
 
-        Fy_f = Fn_f * self.D_f * ca.sin(self.C_f * ca.atan(self.B_f * alpha_f))
-        Fy_r = Fn_r * self.D_r * ca.sin(self.C_r * ca.atan(self.B_r * alpha_r))
+        # Fy_f = Fn_f * self.D_f * ca.sin(self.C_f * ca.atan(self.B_f * alpha_f))
+        # Fy_r = Fn_r * self.D_r * ca.sin(self.C_r * ca.atan(self.B_r * alpha_r))
+        Fy_f = -Fn_f * self.D_f * ca.sin(self.C_f * ca.atan(self.B_f * alpha_f))
+        Fy_r = -Fn_r * self.D_r * ca.sin(self.C_r * ca.atan(self.B_r * alpha_r))
         return Fy_f, Fy_r
     
     def get_motor_force(self, throttle):
@@ -162,7 +164,8 @@ class VehicleModel:
         Fx =  self.get_motor_force(throttle) - self.Cr_0 - self.Cr_2 * vx * vx
 
         rt = (ca.tan(steering_angle)*vx)/(self.length_f + self.length_r)
-        Mtv = self.ptv * (rt - r)
+        #Mtv = self.ptv * (rt - r)
+        Mtv = 0.0
 
         model.set_rhs('s', sdot)
         model.set_rhs('n', 

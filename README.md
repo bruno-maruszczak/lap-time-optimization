@@ -80,23 +80,22 @@ Simplfied Pacejka tire model is used to calculate the lateral tire forces. <br /
 #### Problems with the model
 > **Important:**  
 > During tests, we found some unexpected behaviour, where without sending any control signals and initial speed `ex. vx = 5.0`, the car suddenly turns around 180 degrees, after about 1 second of simulation.
-> We were unable to find the cause of this error, however the cause seems to be hidden somewhere in lateral Tire forces equations.
+> We were able to find the cause of this error, but a more thoroughtly documented tire model would help find such errors faster
 
-TODO, dodac wykresy symulacji
 
 <hr />
 
 ### Model predictive control
 We used **do-mpc library** that implements a mpc controller for this part of the project. The objective function of the optimizer inside do_mpc is also based on an article: [Optimization-Based Hierarchical Motion Planning for Autonomous Racing](documents/model_description.pdf). 
 #### Problems with the MPC
-We were unable to get good results using the controller, due to error on modelling of the system.
+We were unable to get good results reliably using the controller, due to complicated boundry conditions and highly nonlinear model.
 The optimizer takes a really long time to calculate the control signals (a few hours of runtime, for a few seconds of simulation), consuming a lot of RAM (approaching 16GBs)<br />
 There are two possible reasons for this behaviour, the first being a bad implementation of the model, the second being:
 ##### Problem with calculating curvature of the trajectory
-The do_mpc rquirest the model to be writtne using symbolix expressions (using casadi library as a backend). In our project, we utilize B-splines to define the trajectory that our vehicle will follow, with these splines parameterized by a variable `u`. To effectively plan and control the vehicle's path, we need a symbolic expression for the curvature at a given arc-length `s`. <br />
-However, directly obtaining this symbolic expression is challenging because there is no straightforward translation between the parameter `u` and arc-length `s`. <br />
+The do_mpc required the model to be written using symbolic expressions (using casadi library as a backend). In our project, we utilize B-splines to define the trajectory that our vehicle will follow, with these splines parameterized by a variable `u`. To effectively plan and control the vehicle's path, we need a symbolic expression for the curvature at a given arc-length `s`. <br />
+However, obtaining this symbolic expression directly is challenging because there is no straightforward translation between the parameter `u` and arc-length `s`. <br />
 As a solution, we sample the curvature at a given arc-length s, and generate a look-up table, from which we generate a symbolic expression using linear piecewise approximation.
-Resulting expression, due to being a complex, long piecewise expression, and by nature not a smooth function, maybe be bad for optimization algorithms.
+Resulting expression, due to being a complex piecewise expression, and by nature not a smooth function, may be bad for optimization algorithms. Arc-length parametrized spline should be used to approximate the track in the place of B-spline.
 
 ### Results
 
