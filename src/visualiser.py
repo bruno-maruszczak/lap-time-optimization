@@ -58,10 +58,10 @@ class Visualiser:
             y += n * normal_vector[1]
 
             # calculate the speed vector
-            vx = vx * np.cos(mu) - vy * np.sin(mu)
-            vy = vx * np.sin(mu) + vy * np.cos(mu)
+            v_long = vx * np.cos(mu) - vy * np.sin(mu)
+            v_lat = vx * np.sin(mu) + vy * np.cos(mu)
 
-            velocity = vx + vy
+            velocity = v_long*tangent_vector + v_lat*normal_vector
 
             positions[i, :] = np.array([x, y]).ravel()
             velocities[i, :] = velocity.ravel()
