@@ -105,6 +105,7 @@ Resulting expression, due to being a complex piecewise expression, and by nature
 ##### Tire model state chart
 ![Tire forces](./data/plots/MPC/tire_forces.png)
 <hr/>
+
 ![Global view](./data/plots/MPC/full_scale.png)
 
 
