@@ -101,12 +101,12 @@ def main():
     # create controller
     log("Creating MPC controller...")
     # Pickle doesnt work with do_mpc mpc controller, there's a function that saves the solution object, works only on linux TODO
-    # controller = Controller(model, np.reshape([1e-2, 1e-2], (-1, 1)))
+    controller = Controller(model, np.reshape([1e-2, 1e-2], (-1, 1)))
 
     # Prepare x0
     s0, n0, mu0 = 0., 0., 0.
-    vx0, vy0, r0 = 8.0, 0.1, 0.
-    steer_angle0, throttle0 = 0., 0.
+    vx0, vy0, r0 = 5.0, 0.0, 0.
+    steer_angle0, throttle0 = 0., 0.1
     x0 = np.reshape([s0, n0, mu0, vx0, vy0, r0, steer_angle0, throttle0], (-1, 1))
 
     # simualtion
@@ -114,15 +114,15 @@ def main():
     simulator = Simulator(model)
     sim = simulator.simulator
     sim.x0 = x0
-    # controller.mpc.x0 = x0 
-    # controller.mpc.set_initial_guess()
+    controller.mpc.x0 = x0 
+    controller.mpc.set_initial_guess()
     estimator = do_mpc.estimator.StateFeedback(model.model)
     estimator.x0 = x0
 
     fig, ax, sim_graphics = simulator.plot_results()
     u0 = np.array([[0.0], [0.0]])
     
-    steps = 100
+    steps = 25
     # Prepare variables for saving states, contorl to json
     X = np.zeros((steps + 1, *x0.shape))
     X[0] = x0
@@ -139,7 +139,7 @@ def main():
 
     for i in range(1, steps + 1):
         log(f"\n---------------------------\nsimulation step: {i}\n---------------------------\n")
-        # u0 = controller.mpc.make_step(x0)
+        u0 = controller.mpc.make_step(x0)
         y = sim.make_step(u0)
         x0 = estimator.make_step(y)
         X[i] = x0
