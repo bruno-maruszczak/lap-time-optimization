@@ -107,6 +107,9 @@ Resulting expression, due to being a complex piecewise expression, and by nature
 <hr/>
 
 ![Global view](./data/plots/MPC/full_scale.png)
+##### Best result from 24h simulation run, 25 steps prediction horizon
+
+![Best result](./data/plots/MPC/best_24h.png)
 
 <hr />
 
