@@ -129,7 +129,8 @@ class VehicleModel:
         x = self.model.x
         b_dyn = ca.atan(x['vy']/x['vx'])
         b_kin = ca.atan(x['steering_angle']*self.length_r / (self.length_f + self.length_r))
-        return q_B * (b_dyn - b_kin)**2
+        # return q_B * (b_dyn - b_kin)**2
+        return 0.0
 
     def create_model(self) -> do_mpc.model.Model:
         """
@@ -161,7 +162,7 @@ class VehicleModel:
 
         Fy_f, Fy_r = self.get_lateral_forces(alpha_f, alpha_r)
         
-        Fx =  self.get_motor_force(throttle) - self.Cr_0 - self.Cr_2 * vx * vx
+        Fx =  self.get_motor_force(throttle) - ca.sign(vx) * 100 * self.Cr_0 - self.Cr_2 * vx * vx
 
         rt = (ca.tan(steering_angle)*vx)/(self.length_f + self.length_r)
         #Mtv = self.ptv * (rt - r)

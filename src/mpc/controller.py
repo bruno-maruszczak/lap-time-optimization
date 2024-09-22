@@ -6,7 +6,7 @@ from numpy.typing import ArrayLike
 from mpc.model import VehicleModel
 
 class Controller:
-    def __init__(self, model : VehicleModel, control_costs : ArrayLike, n_horizon : int = 10, t_step : float = 0.1, n_robust : int = 0):
+    def __init__(self, model : VehicleModel, control_costs : ArrayLike, n_horizon : int = 25, t_step : float = 0.1, n_robust : int = 0):
         self.model = model
         self.mpc_model = self.model.model
         self.t_step = t_step
@@ -17,7 +17,7 @@ class Controller:
             't_step' : t_step,
             'n_robust' : n_robust,
             'store_full_solution' : False,
-            'nlpsol_opts': {'ipopt.max_iter': 1000 }
+            'nlpsol_opts': {'ipopt.max_iter': 800 }
         }
         self.mpc.set_param(**setup_mpc)    
 
@@ -28,7 +28,7 @@ class Controller:
         # q_n is a cost for deviating from the optimal path (in perpendicular to path direction)
         # q_mu is a cost for a heading that deviates from the optimal path
         # q_B penalizes the difference between the kinematic and dynamic side slip angle.
-        q_n, q_mu, q_B = 0.5, 3.0, 1e-2
+        q_n, q_mu, q_B = 1.0, 3.0, 1e-2
         self.set_constraints(rho, alpha)
         self.set_objective(control_costs, q_n, q_mu, q_B)
         self.mpc.setup()
@@ -47,10 +47,10 @@ class Controller:
         mu = self.mpc_model.x['mu']
 
         # mterm - Add algebraic constraints here
-        lterm = 1.0*ca.exp(-sdot)/np.e + q_n*(n**2) + q_mu*(mu**2) + self.model.B(q_B) # Use to recreate plot results
-        # lterm = -self.t_step*(sdot) + q_n*(n**2) + q_mu*(mu**2) + self.model.B(q_B)
-        # mterm = ca.SX(0)
-        mterm = lterm
+        #lterm = 1.0*ca.exp(-sdot)/np.e + q_n*(n**2) + q_mu*(mu**2) + self.model.B(q_B) # Use to recreate plot results
+        lterm = -self.t_step*(sdot) + q_n * ca.sign(n) * n + q_mu*ca.sign(mu)*mu + self.model.B(q_B)
+        mterm = ca.SX(0)
+        #mterm = lterm
         self.mpc.set_objective(lterm=lterm, mterm=mterm)
 
     def set_constraints(self, rho, alpha):
@@ -65,18 +65,18 @@ class Controller:
 
         # non-linear constraints (for the vehicle to stay in track)
         left, right = self.model.get_lateral_constraint(s, n, mu)
-        self.mpc.set_nl_cons('left_dist_cons', left, 0.)
-        self.mpc.set_nl_cons('right_dist_cons', right, 0.)
+        #self.mpc.set_nl_cons('left_dist_cons', left, 0.)
+        #self.mpc.set_nl_cons('right_dist_cons', right, 0.)
 
         front, back = self.model.get_traction_ellipse_constraint(throttle, vx, vy, r, steering_angle, rho, alpha)
-        self.mpc.set_nl_cons('front_traction_ellipse_cons', front, 0., soft_constraint=True)
-        self.mpc.set_nl_cons('back_traction_ellipse_cons', back, 0., soft_constraint=True)
+        #self.mpc.set_nl_cons('front_traction_ellipse_cons', front, 0., soft_constraint=True)
+        #self.mpc.set_nl_cons('back_traction_ellipse_cons', back, 0., soft_constraint=True)
 
         # TODO Set constraints for velocities, from calculated optimal max_velocities. 
         not_set = 0.
         # Lower state bounds
-        self.mpc.bounds['lower', '_x', 's'] = 0.
-        self.mpc.bounds['lower', '_x', 'n'] = 0.
+        #self.mpc.bounds['lower', '_x', 's'] = 0.
+        #self.mpc.bounds['lower', '_x', 'n'] = 0.
         self.mpc.bounds['lower', '_x', 'mu'] = -np.pi*0.5 #TODO
         self.mpc.bounds['lower', '_x', 'vx'] = 0. # TODO
         # self.mpc.bounds['lower', '_x', 'vy'] = not_set
