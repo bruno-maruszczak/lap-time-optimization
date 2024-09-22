@@ -108,6 +108,7 @@ Resulting expression, due to being a complex piecewise expression, and by nature
 
 ![Global view](./data/plots/MPC/full_scale.png)
 
+<hr />
 
 ### Raceline optimization results
 
@@ -149,7 +150,3 @@ Resulting expression, due to being a complex piecewise expression, and by nature
 ![compromise](./data/plots/MX-5/buckmore/compromise/trajectory.png)
 #### Lap-time (Mazda MX5)
 ![laptime](./data/plots/MX-5/buckmore/laptime/trajectory.png)
-
-TODO wykresy z Symulacji, mpc
-
-
