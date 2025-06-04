@@ -6,20 +6,18 @@ from numpy.typing import ArrayLike
 from mpc.model import VehicleModel
 
 class Controller:
-    def __init__(self, model : VehicleModel, control_costs : ArrayLike, n_horizon : int = 20, t_step : float = 0.8, n_robust : int = 0):
+    def __init__(self, model : VehicleModel, control_costs : ArrayLike, n_horizon : int = 10, t_step : float = 0.1, n_robust : int = 0):
         self.model = model
         self.mpc_model = self.model.model
         self.t_step = t_step
         self.mpc = do_mpc.controller.MPC(self.mpc_model)
-
-        setup_mpc = {
-            'n_horizon' : n_horizon,
-            't_step' : t_step,
-            'n_robust' : n_robust,
-            'store_full_solution' : False,
-            'nlpsol_opts': {'ipopt.max_iter': 1000 }
-        }
-        self.mpc.set_param(**setup_mpc)    
+        self.mpc._settings.store_full_solution = False
+        self.mpc._settings.t_step = t_step
+        self.mpc._settings.n_horizon = n_horizon
+        self.mpc._settings.n_robust = n_robust
+        self.mpc._settings.nlpsol_opts['ipopt.max_iter'] = 1000
+        self.mpc._settings.nlpsol_opts['ipopt.print_level'] = 0
+        # self.mpc._settings.supress_ipopt_output()
 
         # rho determines the shape of the friction ellipse constraint
         # alpha determines the maximum combined force. (the size of the ellipse)
@@ -32,11 +30,7 @@ class Controller:
         self.set_constraints(rho, alpha)
         self.set_objective(control_costs, q_n, q_mu, q_B)
 
-        # options for mpc log
-        self.mpc.settings.nlpsol_opts['ipopt.print_level'] = 0
-        # self.mpc.settings.nlpsol_opts['print_time'] = 0
-        # self.mpc.settings.nlpsol_opts['ipopt.sb'] = 'yes'  
-        # self.mpc.settings.supress_ipopt_output()
+        self.mpc._check_validity()
         self.mpc.setup()
 
     def set_objective(self, control_costs, q_n = 1.0, q_mu = 1.0, q_B = 1.0):
@@ -51,10 +45,12 @@ class Controller:
         s = self.mpc_model.x['s']
         n = self.mpc_model.x['n']
         mu = self.mpc_model.x['mu']
+        vx = self.mpc_model.x['vx']
+        vy = self.mpc_model.x['vy']
 
-
-        mterm = q_n*(n**2) + q_mu*(mu**2) + self.model.B(q_B) # Use to recreate plot results
-        lterm = mterm - sdot
+        vref = self.model.track.velocities_interp(s)
+        mterm = q_n*(n**2) + q_mu*(mu**2) + vy**2
+        lterm = mterm + (vx - 0.6*vref)**2 + self.model.B(q_B)
 
         self.mpc.set_objective(lterm=lterm, mterm=mterm)
 

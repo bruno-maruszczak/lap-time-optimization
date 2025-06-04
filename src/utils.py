@@ -126,3 +126,11 @@ def save_widths_to_json(path, x, name):
     with open(f"{path}\{name}.json", "w") as f:
         json.dump(data, f, indent=4)
 
+def save_velocities_to_json(path, x, name):
+    """saving path to json file"""
+    data = {
+        "name": name, 
+        "velocities": x.tolist()
+        }
+    with open(f"{path}\{name}.json", "w") as f:
+        json.dump(data, f, indent=4)

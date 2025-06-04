@@ -9,7 +9,7 @@ from trajectory import Trajectory
 from trajectory_bayesian_nonlinear import TrajectoryBayesianNonlinear
 from vehicle import Vehicle
 from vehicleMX5 import VehicleMX5
-from utils import save_path_to_json, save_widths_to_json
+from utils import save_path_to_json, save_widths_to_json, save_velocities_to_json
 
 ###############################################################################
 # Argument parsing
@@ -210,7 +210,7 @@ if args.plot_trajectory or args.plot_all:
 save_path_to_json(plot_dir, track.old_left[0], track.old_left[1], f"left")
 save_path_to_json(plot_dir, track.old_right[0], track.old_right[1], f"right")  
 save_widths_to_json(plot_dir, track.widths, f"widths")
-
+save_velocities_to_json(plot_dir, trajectory.velocity.v, f"velocities")
 
 print(f"track size: {track.size}")
 print(f"widths: {len(track.widths)}")

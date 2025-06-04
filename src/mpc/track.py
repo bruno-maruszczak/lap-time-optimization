@@ -16,7 +16,7 @@ class Track:
         self.right_bound_x, self.right_bound_y = self.load_path_from_json(os.path.join(base_path, "right.json"))
         self.path_x, self.path_y = self.load_path_from_json(os.path.join(base_path, "path.json"))
         self.widths = self.load_path_from_json(os.path.join(base_path, "widths.json"))
-
+        self.velocities = self.load_path_from_json(os.path.join(base_path, "velocities.json"))
         self.n_samples = n_samples
         self.left_bound = ControllerReferencePath(np.array([self.left_bound_x, self.left_bound_y]), closed=True, n_samples=self.n_samples)
         self.right_bound = ControllerReferencePath(np.array([self.right_bound_x, self.right_bound_y]), closed=True, n_samples=self.n_samples)
@@ -35,6 +35,11 @@ class Track:
             )
             for side in ["left", "right"]
         }
+        # Create velocity lookup table
+        self.velocities_interp = ca.interpolant(
+            "velocities", "linear", [arc],
+            np.array(self.velocities)
+        )
 
     def load_path_from_json(self, filepath):
         """Load path data from a JSON file."""
@@ -44,6 +49,8 @@ class Track:
         name = data["name"]
         if name == "widths":
             return np.array(data["width"])
+        elif name == "velocities":
+            return np.array(data["velocities"])
         else:
             x = np.array(data["path"]["x"])
             y = np.array(data["path"]["y"])

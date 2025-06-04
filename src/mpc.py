@@ -85,7 +85,7 @@ def log(msg, **kwargs):
 
 def main(): 
     log("Loading Track")
-    n_samples = 500
+    n_samples = 846 # BAD BAD code, should implement proper arc length sampling of velocities
     track = Track("MX-5", "buckmore", method, n_samples)
     path = track.optimal_path
 
@@ -136,7 +136,7 @@ def main():
 
     U = np.zeros((steps + 1, *u0.shape))
     U[0] = u0
-
+    last_s = x0[0]
     for i in range(1, steps + 1):
         log(f"\n---------------------------\nsimulation step: {i}\n---------------------------\n")
         u0 = controller.mpc.make_step(x0)
@@ -149,6 +149,8 @@ def main():
         alphas[i,:] = np.array([alpha_f, alpha_r])
         Fy_f, Fy_r = model.get_lateral_forces(alpha_f, alpha_r)
         Fys[i,:] = np.array([Fy_f, Fy_r])
+        print(f"sdot {(x0[0] - last_s) / controller.t_step}")
+        last_s = x0[0]
 
 
     # Save to json
