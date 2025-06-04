@@ -31,6 +31,12 @@ class Controller:
         q_n, q_mu, q_B = 0.5, 3.0, 1e-2
         self.set_constraints(rho, alpha)
         self.set_objective(control_costs, q_n, q_mu, q_B)
+
+        # options for mpc log
+        self.mpc.settings.nlpsol_opts['ipopt.print_level'] = 0
+        # self.mpc.settings.nlpsol_opts['print_time'] = 0
+        # self.mpc.settings.nlpsol_opts['ipopt.sb'] = 'yes'  
+        # self.mpc.settings.supress_ipopt_output()
         self.mpc.setup()
 
     def set_objective(self, control_costs, q_n = 1.0, q_mu = 1.0, q_B = 1.0):

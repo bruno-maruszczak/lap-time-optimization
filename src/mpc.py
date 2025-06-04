@@ -15,7 +15,7 @@ from visualiser import Visualiser
 import do_mpc
 
 import casadi as ca
-DEBUG = True
+DEBUG = False
 
 @unique
 class Method(IntEnum):
@@ -122,7 +122,7 @@ def main():
     fig, ax, sim_graphics = simulator.plot_results()
     u0 = np.array([[0.0], [0.0]])
     
-    steps = 100
+    steps = 5
     # Prepare variables for saving states, contorl to json
     X = np.zeros((steps + 1, *x0.shape))
     X[0] = x0
