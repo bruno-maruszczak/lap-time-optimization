@@ -10,7 +10,9 @@ from trajectory import Trajectory
 import optimizers
 from models.simple_gasoline_vehicle import SimpleGasolineVehicle
 from models.pacejka_tires_electric_vehicle import PacejkaTiresElectricVehicle
-from utils import save_path_to_json
+from vehicleMX5 import VehicleMX5
+from utils import save_path_to_json, save_widths_to_json, save_velocities_to_json
+
 
 ###############################################################################
 # Argument parsing
@@ -98,12 +100,11 @@ args = parser.parse_args()
 
 track_width = args.track_width[0]
 track = Track(args.track[0], track_width=track_width)
-print(f"vehicle: {args.vehicle[0]}")
-if args.vehicle[0] == "./data/vehicles/our_car.json":
-    vehicle = PacejkaTiresElectricVehicle(args.vehicle[0])
+
+if args.vehicle[0] == "./data/vehicles/MX5.json":
+    vehicle = VehicleMX5(args.vehicle[0])
 else:
     vehicle = SimpleGasolineVehicle(args.vehicle[0])
-
 
 if args.method is Method.BAYES or args.method is Method.NONLINEAR:
     trajectory = TrajectoryBayesianNonlinear(track, vehicle)
@@ -181,7 +182,7 @@ print()
 
 method_dirs = ['curvature', 'compromise', 'laptime', 'sectors', 'estimated', 'bayesian', 'nonlinear']
 plot_dir = os.path.join(
-    os.path.dirname(__file__), '..', 'data', 'plots', track.name,
+    os.path.dirname(__file__), '..', 'data', 'plots', vehicle.name, track.name,
     method_dirs[args.method]
 )
 if not os.path.exists(plot_dir):
@@ -200,7 +201,7 @@ if args.plot_path or args.plot_all:
         track.old_left, track.old_right, trajectory.path.position(trajectory.s),
         trajectory.path.controls
     )
-    save_path_to_json(plot_dir, trajectory.path.position(trajectory.s)[0], trajectory.path.position(trajectory.s)[1], f"path_{track.name}")
+    save_path_to_json(plot_dir, trajectory.path.position(trajectory.s)[0], trajectory.path.position(trajectory.s)[1], f"path")
 
 if args.plot_trajectory or args.plot_all:
 
@@ -210,6 +211,11 @@ if args.plot_trajectory or args.plot_all:
         trajectory.velocity.v
     )
 
+# saving left and right boundries of track to json file
+save_path_to_json(plot_dir, track.old_left[0], track.old_left[1], f"left")
+save_path_to_json(plot_dir, track.old_right[0], track.old_right[1], f"right")  
+save_widths_to_json(plot_dir, track.widths, f"widths")
+save_velocities_to_json(plot_dir, trajectory.velocity.v, f"velocities")
 
-print(f" track size: {track.size}")
+print(f"track size: {track.size}")
 print(f"widths: {len(track.widths)}")

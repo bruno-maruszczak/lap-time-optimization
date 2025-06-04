@@ -93,7 +93,6 @@ class Track:
         i = np.nonzero(alphas != -1)[0]
         return self.left_decongested[:, i] + (alphas[i] * self.diffs_decongested[:,i])
     
-     # TODO: put that method inside read_cones
     def new_left_cones(self, old_left, old_right, track_width):
         """Return new left cones based on old left cones and track width parameter."""
         new_left = np.zeros((2, old_left[0].size))
@@ -117,3 +116,6 @@ class Track:
             new_diff = track_width * diff / 2
             new_right[:, i] = right + new_diff
         return new_right
+
+    
+        

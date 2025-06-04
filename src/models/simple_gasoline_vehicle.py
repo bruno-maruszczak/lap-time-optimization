@@ -34,7 +34,7 @@ class SimpleGasolineVehicle(VehicleBase):
 
     def traction(self, velocity, curvature):
         """Determine remaining traction when negotiating a corner."""
-        f = self.cof * self.mass * GRAV
+        f = self.friction_coef * self.mass * GRAV
         f_lat = self.mass * velocity**2 * curvature
         if f <= f_lat:
             return 0

@@ -1,21 +1,6 @@
 import numpy as np
 import do_mpc
 from path import Path
-<<<<<<<< HEAD:src/models/pacejka_tires_electric_vehicle.py
-import json
-import re
-
-import casadi as ca
-from models.vehicle_base import VehicleBase
-
-class PacejkaTiresElectricVehicle(VehicleBase):
-    def __init__(self, vehicle_filepath):#, track_line: Path):
-        # self.track_line = track_line
-        self.load_params(vehicle_filepath)
-        # self.model = self.create_model()
-        # self.model.setup()
-        print("[ Imported {} ]".format(self.name))
-========
 import re
 
 import casadi as ca
@@ -46,7 +31,7 @@ class VehicleModel:
         self.load_params(params_file_path)
         self.model = self.create_model()
         self.model.setup()
->>>>>>>> main:src/mpc/model.py
+
 
     def remove_comments(self, json_str):
         # Remove single-line comments
@@ -78,19 +63,13 @@ class VehicleModel:
             self.C_r = data["rearTire"]["C_r"]
             self.D_r = data["rearTire"]["D_r"]
 
-<<<<<<<< HEAD:src/models/pacejka_tires_electric_vehicle.py
-            # mechanical transmision
-            self.C_m = data["control"]["C_m"]
-            # rolling resistance
-========
-            self.C_m = data["control"]["C_m"]
->>>>>>>> main:src/mpc/model.py
+
             self.Cr_0 = data["Cr_0"]
             # resistance proportional to square of velocity
             self.Cr_2 = data["Cr_2"]
             self.ptv = data["ptv"]
 
-<<<<<<<< HEAD:src/models/pacejka_tires_electric_vehicle.py
+
             # Engine control inputs and parameters:
             # forward/backward direction
             self.T = data["control"]["T"]
@@ -112,8 +91,6 @@ class VehicleModel:
         return f_long
 
 
-========
->>>>>>>> main:src/mpc/model.py
     def k(self, s):
         return self.optimal_path.find_curvature_at_s(s)
 

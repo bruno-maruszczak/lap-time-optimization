@@ -1,12 +1,13 @@
 import numpy as np
 from math import sqrt
 
+
 GRAV = 9.81  # ms^-2
 
 ###############################################################################
 
 
-class VelocityProfile:
+class VelocityProfileMX5:
     """
     Stores and generates a velocity profile for a given path and vehicle.
     """
@@ -26,7 +27,11 @@ class VelocityProfile:
         self.v = np.minimum(self.v_acclim, self.v_declim)
 
     def limit_local_velocities(self, k):
-        self.v_local = np.sqrt(self.vehicle.friction_coef * GRAV / k)
+        """simple local limit for velocity"""
+        D = 0.5 * (self.vehicle.D_f + self.vehicle.D_r)
+        # calculated from the formula F_lat = F_friction = m * v^2 / r = mi * m * g => v = sqrt(g * r * mi)
+        self.v_local = np.sqrt(D * GRAV / k)
+        # print(f"v_local: {self.v_local}")
 
     def limit_acceleration(self, k_in):
 
@@ -42,8 +47,10 @@ class VelocityProfile:
             if wrap and self.s_max is None:
                 continue
             if v[i] > v[i-1]:
-                traction = self.vehicle.traction(v[i-1], k[i-1])
+                traction = self.vehicle.traction(v[i-1])
+                # print(f"traction: {traction}")
                 force = min(self.vehicle.engine_force(v[i-1]), traction)
+                # print(f"force: {force}")
                 accel = force / self.vehicle.mass
                 ds = self.s_max - s[i-1] if wrap else s[i] - s[i-1]
                 vlim = sqrt(v[i-1]**2 + 2*accel*ds)
@@ -66,7 +73,8 @@ class VelocityProfile:
             if wrap and self.s_max is None:
                 continue
             if v[i] > v[i-1]:
-                traction = self.vehicle.traction(v[i-1], k[i-1])
+                traction = self.vehicle.traction(v[i-1], k_in)
+                
                 decel = traction / self.vehicle.mass
                 ds = self.s_max - s[i] if wrap else s[i-1] - s[i]
                 vlim = sqrt(v[i-1]**2 + 2*decel*ds)

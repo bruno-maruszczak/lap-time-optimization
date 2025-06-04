@@ -8,18 +8,84 @@ import casadi as ca
 from typing import List, Tuple
 
 
+def cumulative_distances(points):
+    """Returns the cumulative linear distance at each point."""
+    d = np.cumsum(np.linalg.norm(np.diff(points, axis=1), axis=0))
+    return np.append(0, d)
 
 
 class Path:
     """Wrapper for scipy.interpolate.BSpline."""
 
-    def __init__(self, controls, closed, n_samples=1000):
+    def __init__(self, controls, closed):
         """Construct a spline through the given control points."""
         self.controls = controls
         self.closed = closed
         self.dists = cumulative_distances(controls)
         self.spline, _ = splprep(controls, u=self.dists, k=3, s=0, per=self.closed)
         self.length = self.dists[-1]
+
+
+    def position(self, s=None):
+        """Returns x-y coordinates of sample points."""
+        if s is None:
+            return self.controls
+        x, y = splev(s, self.spline)
+        return np.array([x, y])
+
+    def curvature(self, u=None, return_absolute_value=True):
+        """
+        Calculate curvature of spline at given parameter u value
+        
+        Parameters:
+        - u: parameter values at which to compute the curvature
+        
+        Returns:
+        - curvature: the curvature values at each parameter value u
+        """
+        
+        if u is None:
+            u = self.dists
+
+        # First derivatives dx/du and dy/du
+        dx_du, dy_du = splev(u, self.spline, der=1)
+        
+        # Second derivatives d2x/du2 and d2y/du2
+        d2x_du2, d2y_du2 = splev(u, self.spline, der=2)
+        
+        # Curvature formula: kappa(u) = |dx/du * d2y/du2 - dy/du * d2x/du2| / (dx/du^2 + dy/du^2)^(3/2)
+
+        curvature = (dx_du * d2y_du2 - dy_du * d2x_du2) / (dx_du**2 + dy_du**2)**(3/2)
+
+        
+        return np.abs(curvature) if return_absolute_value else curvature
+    
+    def gamma2(self, u=None):
+        """Returns the sum of the squares of sample curvatures, Gamma^2."""
+        if u is None:
+            u = self.dists
+
+        # First derivatives dx/du and dy/du
+        dx_du, dy_du = splev(u, self.spline, der=1)
+        
+        # Second derivatives d2x/du2 and d2y/du2
+        d2x_du2, d2y_du2 = splev(u, self.spline, der=2)
+        
+        # Curvature formula: kappa(u) = |dx/du * d2y/du2 - dy/du * d2x/du2| / (dx/du^2 + dy/du^2)^(3/2)
+        curvature = (dx_du * d2y_du2 - dy_du * d2x_du2) / (dx_du**2 + dy_du**2)**(3/2)
+        curvature = curvature**2
+        return np.sum(curvature)
+
+
+
+
+
+
+class ControllerReferencePath(Path):
+    """Wrapper for scipy.interpolate.BSpline."""
+
+    def __init__(self, controls, closed, n_samples=1000):
+        super().__init__(controls, closed)
 
         # sample u, to calculate transformation u -> arc_length (return u given arc length)
         self.u_sampled = np.linspace(0, self.length, n_samples)
@@ -28,13 +94,23 @@ class Path:
         #Generate curvature(s) as a lookup table, where s - arc legnth, 
         # for when s is a symbolic variable and its numerical value is unknown, during call
         self.curvature_lookup_table = self.create_curvature_table(n_samples)
+        s_vals, k_vals = zip(*self.curvature_lookup_table)
+        self.curvature_interp = ca.interpolant(
+            "curvature_interp", "linear",
+            [np.array(s_vals)], np.array(k_vals)
+        )
+
+    @classmethod
+    def fromPath(cls, path : Path, n_samples=1000):
+        return cls(path.controls, path.closed, n_samples)
+
         
     def piecewise_linear_interpolation(self,x, x_values, y_values):
         """
         Function should return an casadi expression that represents piecewise linear interpolation of a given lookup-table
         """
         # Create a CasADi MX variable for the result
-        result = ca.SX(0)
+        result = ca.MX(0.)
         
         # Iterate over the intervals between x_values
         for i in range(len(x_values) - 1):
@@ -65,7 +141,16 @@ class Path:
         """
         s_max = self.arc_lengths_sampled[-1]
         s_values = np.linspace(0, s_max, n_samples)
-        table = [(s, self.find_curvature_at_s(s)) for s in s_values]
+
+        def find_curvature(s):
+                    # Interpolate to find the corresponding u for the given arc length s
+            u = self.find_u_given_s(s)
+        
+            # Calculate curvature at the interpolated u value
+            curvature = self.curvature(u, return_absolute_value=False)
+        
+            return curvature
+        table = [(s, find_curvature(s)) for s in s_values]
         return table
 
     def calculate_arc_length(self):
@@ -112,70 +197,14 @@ class Path:
         """
 
         # if s is a casadi symbolic expression
-        if isinstance(s, ca.SX):
-            x_values, y_values = zip(*self.curvature_lookup_table)
-            expr = self.piecewise_linear_interpolation(s, x_values, y_values)
-            return expr
+        # if isinstance(s, ca.MX):
+        return self.curvature_interp(s)
 
-        # Interpolate to find the corresponding u for the given arc length s
-        u = self.find_u_given_s(s)
-        
-        # Calculate curvature at the interpolated u value
-        curvature = self.curvature(u)
-        
-        return curvature
+
+
+    def get_sample_points(self):
+        """
+        Return the finely sampled points on the curve.
+        """
+        return splev(self.u_sampled, self.spline)
     
-    def position(self, s=None):
-        """Returns x-y coordinates of sample points."""
-        if s is None:
-            return self.controls
-        x, y = splev(s, self.spline)
-        return np.array([x, y])
-
-    def curvature(self, u=None):
-        """
-        Calculate curvature of spline at given parameter u value
-        
-        Parameters:
-        - u: parameter values at which to compute the curvature
-        
-        Returns:
-        - curvature: the curvature values at each parameter value u
-        """
-        
-        if u is None:
-            u = self.dists
-
-        # First derivatives dx/du and dy/du
-        dx_du, dy_du = splev(u, self.spline, der=1)
-        
-        # Second derivatives d2x/du2 and d2y/du2
-        d2x_du2, d2y_du2 = splev(u, self.spline, der=2)
-        
-        # Curvature formula: kappa(u) = |dx/du * d2y/du2 - dy/du * d2x/du2| / (dx/du^2 + dy/du^2)^(3/2)
-        curvature = np.abs(dx_du * d2y_du2 - dy_du * d2x_du2) / (dx_du**2 + dy_du**2)**(3/2)
-        
-        return curvature
-
-    def gamma2(self, u=None):
-        """Returns the sum of the squares of sample curvatures, Gamma^2."""
-        if u is None:
-            u = self.dists
-
-        # First derivatives dx/du and dy/du
-        dx_du, dy_du = splev(u, self.spline, der=1)
-        
-        # Second derivatives d2x/du2 and d2y/du2
-        d2x_du2, d2y_du2 = splev(u, self.spline, der=2)
-        
-        # Curvature formula: kappa(u) = |dx/du * d2y/du2 - dy/du * d2x/du2| / (dx/du^2 + dy/du^2)^(3/2)
-        curvature = (dx_du * d2y_du2 - dy_du * d2x_du2) / (dx_du**2 + dy_du**2)**(3/2)
-        curvature = curvature**2
-        return np.sum(curvature)
-
-###############################################################################
-
-def cumulative_distances(points):
-    """Returns the cumulative linear distance at each point."""
-    d = np.cumsum(np.linalg.norm(np.diff(points, axis=1), axis=0))
-    return np.append(0, d)

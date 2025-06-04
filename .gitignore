@@ -5,7 +5,5 @@ lap_time_venv
 /out
 /img
 .vscode
-/data/plots
-/src/models/__pycache__
-/src/data/__pycache__
-/src/optimizers/__pycache__
+*.pkl
+sim_results.json
