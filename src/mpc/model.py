@@ -74,6 +74,7 @@ class VehicleModel:
             # forward/backward direction
             self.T = data["control"]["T"]
             self.friction_coef = data["control"]["lambda"]
+            self.C_m = data["control"]["C_m"]
             # eliptical parameter for friction ellipse
             self.ro_long = data["control"]["ro_long"]
 
