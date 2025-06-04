@@ -71,8 +71,8 @@ class VehicleModel:
         length = self.length_f + self.length_r
         width = self.width
 
-        NL = self.track.find_dist_to_band(s, "left")
-        NR = self.track.find_dist_to_band(s, "right")
+        NL = self.track.find_dist_to_band_symb(s, "left")
+        NR = self.track.find_dist_to_band_symb(s, "right")
         
         left_constraint = n - length * 0.5 * ca.sin(ca.sign(mu) * mu) + width * 0.5 * ca.cos(mu) - NL
         right_constraint = - n + length * 0.5 * ca.sin(ca.sign(mu) * mu) + width * 0.5 * ca.cos(mu) - NR

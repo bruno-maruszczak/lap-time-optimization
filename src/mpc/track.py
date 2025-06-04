@@ -97,6 +97,11 @@ class Track:
             slope = B / A
             perp_line = (-slope, 1, -y0 + slope*x0)
         return perp_line
+    
+    def find_dist_to_band_symb(self, s, side : str="left"):  
+        assert side in ["left", "right"]
+        if isinstance(s, ca.MX):
+            return self.bound_dist_interp[side](s)
 
     def find_dist_to_band(self, s, side : str="left"):
         """
@@ -110,9 +115,6 @@ class Track:
         - distance to a chosen band
         """
         assert side in ["left", "right"]
-
-        if isinstance(s, ca.MX):
-            return self.bound_dist_interp[side](s)
         
         u = self.optimal_path.find_u_given_s(s)
         # Find x, y, dx, dy of the spline
