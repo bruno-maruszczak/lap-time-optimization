@@ -6,7 +6,7 @@ from numpy.typing import ArrayLike
 from mpc.model import VehicleModel
 
 class Controller:
-    def __init__(self, model : VehicleModel, control_costs : ArrayLike, n_horizon : int = 20, t_step : float = 0.1, n_robust : int = 0):
+    def __init__(self, model : VehicleModel, control_costs : ArrayLike, n_horizon : int = 20, t_step : float = 0.8, n_robust : int = 0):
         self.model = model
         self.mpc_model = self.model.model
         self.t_step = t_step
@@ -81,8 +81,8 @@ class Controller:
         not_set = 0.
         # Lower state bounds
         self.mpc.bounds['lower', '_x', 's'] = 0.
-        self.mpc.bounds['lower', '_x', 'mu'] = -np.pi*0.5 #TODO
-        self.mpc.bounds['lower', '_x', 'vx'] = 0. # TODO
+        self.mpc.bounds['lower', '_x', 'mu'] = -np.pi*0.5
+        self.mpc.bounds['lower', '_x', 'vx'] = 0. 
         # self.mpc.bounds['lower', '_x', 'vy'] = not_set
         # self.mpc.bounds['lower', '_x', 'r'] = not_set
         self.mpc.bounds['lower', '_x', 'steering_angle'] = -np.pi/4
@@ -91,7 +91,7 @@ class Controller:
         # # Upper state bounds
         # self.mpc.bounds['upper', '_x', 's'] = not_set
         # self.mpc.bounds['upper', '_x', 'n'] = not_set 
-        self.mpc.bounds['upper', '_x', 'mu'] = np.pi*0.5 # TODO
+        self.mpc.bounds['upper', '_x', 'mu'] = np.pi*0.5 
         # self.mpc.bounds['upper', '_x', 'vx'] = not_set
         # self.mpc.bounds['upper', '_x', 'vy'] = not_set
         # self.mpc.bounds['upper', '_x', 'r'] = not_set 

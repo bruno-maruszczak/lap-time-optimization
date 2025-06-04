@@ -66,17 +66,13 @@ class VehicleModel:
     def k(self, s):
         return self.optimal_path.find_curvature_at_s(s)
 
-    def N_R(self, s):
-        return self.track.find_dist_to_band(s, "right")
-
-    def N_L(self, s):
-        return self.track.find_dist_to_band(s, "left")
     
     def get_lateral_constraint(self, s, n, mu):
         length = self.length_f + self.length_r
         width = self.width
 
-        NL, NR = self.N_L(s), self.N_R(s)
+        NL = self.track.find_dist_to_band(s, "left")
+        NR = self.track.find_dist_to_band(s, "right")
         
         left_constraint = n - length * 0.5 * ca.sin(ca.sign(mu) * mu) + width * 0.5 * ca.cos(mu) - NL
         right_constraint = - n + length * 0.5 * ca.sin(ca.sign(mu) * mu) + width * 0.5 * ca.cos(mu) - NR

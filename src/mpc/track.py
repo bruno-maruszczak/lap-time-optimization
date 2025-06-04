@@ -59,6 +59,45 @@ class Track:
         x_fine, y_fine = splev(spline.u_sampled, spline.spline)
         plt.plot(x_fine, y_fine, 'tab:red')
 
+    def find_tangent_line(self, x0, y0, dx, dy):
+        """
+        Finds a line tangent to a curve at a given point
+        
+        Parameters:
+        x0, y0 - the given point
+        dx, dy - derivatives of a curve in respect to the parameter u
+
+        Returns:
+        - a tuple (A, B, C) in general line form: Ax + By + C = 0
+        """
+        if dx == 0:
+            return (0, 1, -x0)
+        else:
+            slope = dy/dx
+            return (-1, slope, y0-slope*x0)
+    
+    def find_perpendicular_line(self, line : tuple, x0, y0):
+        """
+        Finds a line perpendicular to a line at a given point 
+        
+        Parameters:
+        x0, y0 - the given point
+        line - a tuple (A, B, C) in general line form: Ax + By + C = 0
+
+        Returns:
+        - a tuple (A, B, C) in general line form: Ax + By + C = 0 of the perpendicular line
+        """
+        A, B, C = line
+        assert A != 0 or B != 0
+        if A == 0:
+            perp_line = (0, 1, -y0)
+        elif B == 0:
+            perp_line = (1, 0, -x0)
+        else:
+            slope = B / A
+            perp_line = (-slope, 1, -y0 + slope*x0)
+        return perp_line
+
     def find_dist_to_band(self, s, side : str="left"):
         """
         Find distance between optimal trajectory and a given band (left/right)
@@ -70,46 +109,6 @@ class Track:
         Returns:
         - distance to a chosen band
         """
-        def find_tangent_line(x0, y0, dx, dy):
-            """
-            Finds a line tangent to a curve at a given point
-            
-            Parameters:
-            x0, y0 - the given point
-            dx, dy - derivatives of a curve in respect to the parameter u
-
-            Returns:
-            - a tuple (A, B, C) in general line form: Ax + By + C = 0
-            """
-            if dx == 0:
-                return (0, 1, -x0)
-            else:
-                slope = dy/dx
-                return (-1, slope, y0-slope*x0)
-        
-        def find_perpendicular_line(line : tuple, x0, y0):
-            """
-            Finds a line perpendicular to a line at a given point 
-            
-            Parameters:
-            x0, y0 - the given point
-            line - a tuple (A, B, C) in general line form: Ax + By + C = 0
-
-            Returns:
-            - a tuple (A, B, C) in general line form: Ax + By + C = 0 of the perpendicular line
-            """
-            A, B, C = line
-            assert A != 0 or B != 0
-            if A == 0:
-                perp_line = (0, 1, -y0)
-            elif B == 0:
-                perp_line = (1, 0, -x0)
-            else:
-                slope = B / A
-                perp_line = (-slope, 1, -y0 + slope*x0)
-            return perp_line
-
-
         assert side in ["left", "right"]
 
         if isinstance(s, ca.MX):
@@ -121,8 +120,8 @@ class Track:
         x0, y0 = splev(u, tck)
         dx, dy = splev(u, tck, der=1)
         # find perpendicular_line
-        tangent = find_tangent_line(x0, y0, dx, dy)
-        perpendicular_line = find_perpendicular_line(tangent, x0, y0)
+        tangent = self.find_tangent_line(x0, y0, dx, dy)
+        perpendicular_line = self.find_perpendicular_line(tangent, x0, y0)
         A, B, C = perpendicular_line
         # Get sampled points on a given band
         bound = self.left_bound if side == "left" else self.right_bound
