@@ -6,7 +6,7 @@ from numpy.typing import ArrayLike
 from mpc.model import VehicleModel
 
 class Controller:
-    def __init__(self, model : VehicleModel, control_costs : ArrayLike, n_horizon : int = 10, t_step : float = 0.1, n_robust : int = 0):
+    def __init__(self, model : VehicleModel, control_costs : ArrayLike, n_horizon : int = 20, t_step : float = 0.1, n_robust : int = 0):
         self.model = model
         self.mpc_model = self.model.model
         self.t_step = t_step
@@ -52,11 +52,10 @@ class Controller:
         n = self.mpc_model.x['n']
         mu = self.mpc_model.x['mu']
 
-        # mterm - Add algebraic constraints here
-        lterm = 1.0*ca.exp(-sdot)/np.e + q_n*(n**2) + q_mu*(mu**2) + self.model.B(q_B) # Use to recreate plot results
-        # lterm = -self.t_step*(sdot) + q_n*(n**2) + q_mu*(mu**2) + self.model.B(q_B)
-        # mterm = ca.SX(0)
-        mterm = lterm
+
+        mterm = q_n*(n**2) + q_mu*(mu**2) + self.model.B(q_B) # Use to recreate plot results
+        lterm = mterm - sdot
+
         self.mpc.set_objective(lterm=lterm, mterm=mterm)
 
     def set_constraints(self, rho, alpha):
@@ -74,15 +73,14 @@ class Controller:
         self.mpc.set_nl_cons('left_dist_cons', left, 0.)
         self.mpc.set_nl_cons('right_dist_cons', right, 0.)
 
-        front, back = self.model.get_traction_ellipse_constraint(throttle, vx, vy, r, steering_angle, rho, alpha)
-        self.mpc.set_nl_cons('front_traction_ellipse_cons', front, 0., soft_constraint=True)
-        self.mpc.set_nl_cons('back_traction_ellipse_cons', back, 0., soft_constraint=True)
+        # front, back = self.model.get_traction_ellipse_constraint(throttle, vx, vy, r, steering_angle, rho, alpha)
+        # self.mpc.set_nl_cons('front_traction_ellipse_cons', front, 0., soft_constraint=True)
+        # self.mpc.set_nl_cons('back_traction_ellipse_cons', back, 0., soft_constraint=True)
 
         # TODO Set constraints for velocities, from calculated optimal max_velocities. 
         not_set = 0.
         # Lower state bounds
         self.mpc.bounds['lower', '_x', 's'] = 0.
-        self.mpc.bounds['lower', '_x', 'n'] = 0.
         self.mpc.bounds['lower', '_x', 'mu'] = -np.pi*0.5 #TODO
         self.mpc.bounds['lower', '_x', 'vx'] = 0. # TODO
         # self.mpc.bounds['lower', '_x', 'vy'] = not_set

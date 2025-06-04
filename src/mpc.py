@@ -85,7 +85,7 @@ def log(msg, **kwargs):
 
 def main(): 
     log("Loading Track")
-    n_samples = 1000
+    n_samples = 500
     track = Track("MX-5", "buckmore", method, n_samples)
     path = track.optimal_path
 
@@ -122,7 +122,7 @@ def main():
     fig, ax, sim_graphics = simulator.plot_results()
     u0 = np.array([[0.0], [0.0]])
     
-    steps = 5
+    steps = 500
     # Prepare variables for saving states, contorl to json
     X = np.zeros((steps + 1, *x0.shape))
     X[0] = x0
