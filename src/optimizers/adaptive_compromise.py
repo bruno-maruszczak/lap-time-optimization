@@ -6,7 +6,7 @@ import time
 import math
 import scipy.optimize as opt
 import numpy as np
-from .curvature_and_length_compromise import CurvatureAndLengthCompromiseOptimizer
+from optimizers.curvature_and_length_compromise import CurvatureAndLengthCompromiseOptimizer
 
 class AdaptiveCompromiseOptimizer(RacelineOptimizer):
     

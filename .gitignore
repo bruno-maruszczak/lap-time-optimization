@@ -6,3 +6,6 @@ lap_time_venv
 /img
 .vscode
 /data/plots
+/src/models/__pycache__
+/src/data/__pycache__
+/src/optimizers/__pycache__

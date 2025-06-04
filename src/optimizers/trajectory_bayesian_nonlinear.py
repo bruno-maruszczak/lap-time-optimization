@@ -24,7 +24,7 @@ class TrajectoryBayesianNonlinear:
     racing line. Samples are taken every metre. It's implemented for two optimisation methods, Bayesian and Nonlinear.
     """
 
-    def __init__(self, track: 'Track', vehicle: SimpleGasolineVehicle):
+    def __init__(self, track: Track, vehicle: SimpleGasolineVehicle):
         """Store track and vehicle and initialise a centerline path."""
         self.track = track
         self.ns = math.ceil(track.length)
