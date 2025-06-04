@@ -94,6 +94,11 @@ class ControllerReferencePath(Path):
         #Generate curvature(s) as a lookup table, where s - arc legnth, 
         # for when s is a symbolic variable and its numerical value is unknown, during call
         self.curvature_lookup_table = self.create_curvature_table(n_samples)
+        s_vals, k_vals = zip(*self.curvature_lookup_table)
+        self.curvature_interp = ca.interpolant(
+            "curvature_interp", "linear",
+            [np.array(s_vals)], np.array(k_vals)
+        )
 
     @classmethod
     def fromPath(cls, path : Path, n_samples=1000):
@@ -105,7 +110,7 @@ class ControllerReferencePath(Path):
         Function should return an casadi expression that represents piecewise linear interpolation of a given lookup-table
         """
         # Create a CasADi MX variable for the result
-        result = ca.SX(0)
+        result = ca.MX(0.)
         
         # Iterate over the intervals between x_values
         for i in range(len(x_values) - 1):
@@ -136,7 +141,16 @@ class ControllerReferencePath(Path):
         """
         s_max = self.arc_lengths_sampled[-1]
         s_values = np.linspace(0, s_max, n_samples)
-        table = [(s, self.find_curvature_at_s(s)) for s in s_values]
+
+        def find_curvature(s):
+                    # Interpolate to find the corresponding u for the given arc length s
+            u = self.find_u_given_s(s)
+        
+            # Calculate curvature at the interpolated u value
+            curvature = self.curvature(u, return_absolute_value=False)
+        
+            return curvature
+        table = [(s, find_curvature(s)) for s in s_values]
         return table
 
     def calculate_arc_length(self):
@@ -183,18 +197,10 @@ class ControllerReferencePath(Path):
         """
 
         # if s is a casadi symbolic expression
-        if isinstance(s, ca.SX):
-            x_values, y_values = zip(*self.curvature_lookup_table)
-            expr = self.piecewise_linear_interpolation(s, x_values, y_values)
-            return expr
+        # if isinstance(s, ca.MX):
+        return self.curvature_interp(s)
 
-        # Interpolate to find the corresponding u for the given arc length s
-        u = self.find_u_given_s(s)
-        
-        # Calculate curvature at the interpolated u value
-        curvature = self.curvature(u, return_absolute_value=False)
-        
-        return curvature
+
 
     def get_sample_points(self):
         """

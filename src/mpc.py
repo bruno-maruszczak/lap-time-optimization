@@ -67,7 +67,7 @@ def plot_dist(track : Track, side):
     which is needed for do_mpc model.
     """
 
-    s_sym = ca.SX.sym('s')
+    s_sym = ca.MX.sym('s')
     expr = track.find_dist_to_band(s_sym, side)
     
     d = ca.Function('curvature', [s_sym], [expr])
@@ -122,7 +122,7 @@ def main():
     fig, ax, sim_graphics = simulator.plot_results()
     u0 = np.array([[0.0], [0.0]])
     
-    steps = 25
+    steps = 100
     # Prepare variables for saving states, contorl to json
     X = np.zeros((steps + 1, *x0.shape))
     X[0] = x0

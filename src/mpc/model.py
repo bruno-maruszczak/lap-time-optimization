@@ -137,7 +137,7 @@ class VehicleModel:
         """
 
         model_type = 'continuous'
-        model = do_mpc.model.Model(model_type)
+        model = do_mpc.model.Model(model_type, 'MX')
 
         s = model.set_variable("_x", 's', shape=(1,1))
         n = model.set_variable("_x", 'n', shape=(1,1))

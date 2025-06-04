@@ -64,7 +64,7 @@ class Simulator:
         """
         spline = path.spline
 
-        s_sym = ca.SX.sym('s')
+        s_sym = ca.MX.sym('s')
         lookup = np.array(path.curvature_lookup_table)
         expr = path.find_curvature_at_s(s_sym)
         

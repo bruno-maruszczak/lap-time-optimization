@@ -27,6 +27,14 @@ class Track:
             "left": self.create_distance_table(side="left"), 
             "right": self.create_distance_table(side="right")
         }
+        arc = self.optimal_path.arc_lengths_sampled
+        self.bound_dist_interp = {
+            side: ca.interpolant(
+                f"dist_{side}", "linear", [arc],
+                np.array(self.bound_dist_table[side])
+            )
+            for side in ["left", "right"]
+        }
 
     def load_path_from_json(self, filepath):
         """Load path data from a JSON file."""
@@ -104,11 +112,8 @@ class Track:
 
         assert side in ["left", "right"]
 
-        if isinstance(s, ca.SX):
-            y_values = self.bound_dist_table[side]
-            x_values = self.optimal_path.arc_lengths_sampled
-            expr = self.optimal_path.piecewise_linear_interpolation(s, x_values, y_values)
-            return expr
+        if isinstance(s, ca.MX):
+            return self.bound_dist_interp[side](s)
         
         u = self.optimal_path.find_u_given_s(s)
         # Find x, y, dx, dy of the spline
