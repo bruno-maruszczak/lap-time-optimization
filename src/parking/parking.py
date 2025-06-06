@@ -84,7 +84,7 @@ class ParkingLotBitMap:
         self.width_m = self.width_px / self.scale
         self.length_m = self.length_px / self.scale
 
-        self.PLOT_BOUNDS =  [0, self.length_m, 0, self.width_m]
+        self.PLOT_BOUNDS =  [0, self.width_m, 0, self.length_m]
 
         self.lot_boundary = Polygon([
             (self.PLOT_BOUNDS[0], self.PLOT_BOUNDS[2]), (self.PLOT_BOUNDS[1], self.PLOT_BOUNDS[2]),

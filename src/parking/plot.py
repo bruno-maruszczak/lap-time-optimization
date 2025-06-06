@@ -19,12 +19,12 @@ class Plot:
         ax.set_ylim(self.plot_bounds[2], self.plot_bounds[3])
         ax.set_xlabel('x [m]'); ax.set_ylabel('y [m]'); ax.grid(False)
 
-        for slot in self.parking_lot.slot_lines:
-            x, y = slot.exterior.xy
-            ax.plot(x, y, color="#aaaaaa", linewidth=1)
+        # for slot in self.parking_lot.slot_lines:
+        #     x, y = slot.exterior.xy
+        #     ax.plot(x, y, color="#aaaaaa", linewidth=1)
 
-        for pc in self.parking_lot.parked_cars:
-            x, y = pc.exterior.xy
+        for obs in self.parking_lot.obstacles:
+            x, y = obs.exterior.xy
             ax.fill(x, y, color="#444444")
 
         for m, (coords, L) in self.results.items():
@@ -48,10 +48,10 @@ class Plot:
         axA.set_xlabel('x [m]')
         axA.set_ylabel('y [m]')
 
-        for slot in self.parking_lot.slot_lines:
-            x, y = slot.exterior.xy
-            axA.plot(x, y, color="#bbbbbb", linewidth=1)
-        for pc in self.parking_lot.parked_cars:
+        # for slot in self.parking_lot.slot_lines:
+        #     x, y = slot.exterior.xy
+        #     axA.plot(x, y, color="#bbbbbb", linewidth=1)
+        for pc in self.parking_lot.obstacles:
             x, y = pc.exterior.xy
             axA.fill(x, y, color="#555555")
 

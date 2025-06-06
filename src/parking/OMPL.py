@@ -74,9 +74,9 @@ class OMPL:
 
         # ------------------ Planner wrapper ----------------------------------------
         start = ob.State(space)
-        start_x = 15.0
+        start_x = 10.0
         # start_y = self.parking_lot.Y_MIN + self.car.CAR_LEN / 2 + 0.5  # keep entire car inside bounds
-        start_y = 15.0
+        start_y = 10.0
         start().setX(start_x)
         start().setY(start_y)  # just below the first row
         start().setYaw(math.pi * 0.95)  # facing "up"

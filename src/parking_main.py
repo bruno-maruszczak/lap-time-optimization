@@ -23,8 +23,8 @@ def main():
     colours = {"bicycle": "deepskyblue", "4ws": "orange"}
     results = {m: ompl.create_planner(m) for m in ("bicycle", "4ws")}
 
-    # plot = Plot(parking_lot, results, plot_bounds, colours, car)
-    # plot.static_plot(os.path.join(os.getcwd(), "src/parking/parking_paths.png"))
+    plot = Plot(parking_lot_bitmap, results, plot_bounds, colours, car)
+    plot.static_plot(os.path.join(os.getcwd(), "src/parking/parking_paths.png"))
     # plot.animate(os.path.join(os.getcwd(), "src/parking/parking_animation.gif"))
 
 
