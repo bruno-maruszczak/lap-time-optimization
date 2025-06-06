@@ -70,6 +70,11 @@ class ParkingLot:
                 self.obstacles = self.parked_cars
 
 
+class ParkingLotBitMap:
+    def __init__():
+        
+
+
 class Car:
     def __init__(self):
         # Car that will move (our robot)
