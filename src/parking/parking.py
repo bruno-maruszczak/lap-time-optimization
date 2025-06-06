@@ -2,6 +2,9 @@ from shapely.geometry import Polygon
 import numpy as np
 from shapely.affinity import rotate, translate
 import math
+import cv2
+import matplotlib.pyplot as plt
+
 
 class ParkingLot:
     def __init__(self):
@@ -71,8 +74,55 @@ class ParkingLot:
 
 
 class ParkingLotBitMap:
-    def __init__():
+    def __init__(self, bitmap_path):
+        # Wczytaj bitmapę parkingu z pliku numpy
+        print(bitmap_path)
+        self.bitmap = np.load(bitmap_path)
+        self.scale = 50 # 50 pixels is one meter
+        self.width_px = self.bitmap.shape[1]
+        self.length_px = self.bitmap.shape[0]
+        self.width_m = self.width_px / self.scale
+        self.length_m = self.length_px / self.scale
+
+        self.PLOT_BOUNDS =  [0, self.length_m, 0, self.width_m]
+
+        self.lot_boundary = Polygon([
+            (self.PLOT_BOUNDS[0], self.PLOT_BOUNDS[2]), (self.PLOT_BOUNDS[1], self.PLOT_BOUNDS[2]),
+            (self.PLOT_BOUNDS[1], self.PLOT_BOUNDS[3]), (self.PLOT_BOUNDS[0], self.PLOT_BOUNDS[3])
+        ])
+
+    def get_obstacles(self):
+        self.obstacles = []
+        binary = 1 - self.bitmap
+
+        # Find contours (external only)
+        contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for cnt in contours:
+            # noise filtering
+            if cv2.contourArea(cnt) < 5:
+                continue
+            # change to Polygon (cv2 contours: (N,1,2) -> (N,2))
+            coords = cnt.squeeze()
+            # print(coords)
+            if len(coords.shape) != 2 or coords.shape[0] < 3:
+                continue  # skip degenerate contours
+            poly = Polygon([(x, y) for [x, y] in coords])
+            self.obstacles.append(poly)
+
+    def plot(self, ax=None):
+        if ax is None:
+            fig, ax = plt.subplots()
+        ax.imshow(self.bitmap, cmap="gray", origin="lower")
+        ax.set_title("Parking lot bitmap")
         
+        # Plot obstacles if they exist
+        if hasattr(self, "obstacles"):
+            for poly in self.obstacles:
+                x, y = poly.exterior.xy
+                ax.plot(x, y, color="red", linewidth=1)
+
+        plt.show()
+
 
 
 class Car:
