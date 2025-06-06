@@ -40,6 +40,35 @@ class ParkingLot:
             (self.PLOT_BOUNDS[1], self.PLOT_BOUNDS[3]), (self.PLOT_BOUNDS[0], self.PLOT_BOUNDS[3])
         ])
 
+    def init_parking_slots(self, CAR_LEN, CAR_WID):
+        for row_idx, cy in enumerate(self.ROWS_Y):
+         # x‑coordinate of the centre of the *leftmost* slot
+            first_cx = - (self.N_SPOTS/2 - 0.5) * self.SLOT_W
+            for col in range(self.N_SPOTS):
+                cx = first_cx + col * self.SLOT_W
+                # Slot outline (thin rectangle the size of the slot)
+                slot = Polygon([  # rectangle corners (counter‑clockwise)
+                    (cx - self.SLOT_W/2, cy - self.SLOT_L/2),
+                    (cx + self.SLOT_W/2, cy - self.SLOT_L/2),
+                    (cx + self.SLOT_W/2, cy + self.SLOT_L/2),
+                    (cx - self.SLOT_W/2, cy + self.SLOT_L/2)
+                ])
+                self.slot_lines.append(slot)
+                # Skip the goal slot so it remains empty
+                if row_idx == self.GOAL_ROW and col == self.GOAL_COL:
+                    continue
+        
+                # Create a parked car inside this slot (slightly inset)
+                inset = 0.15
+                pcar = Polygon([
+                    (cx - (CAR_WID/2), cy - (CAR_LEN/2)),
+                    (cx + (CAR_WID/2), cy - (CAR_LEN/2)),
+                    (cx + (CAR_WID/2), cy + (CAR_LEN/2)),
+                    (cx - (CAR_WID/2), cy + (CAR_LEN/2))
+                ])
+                self.parked_cars.append(pcar)
+                self.obstacles = self.parked_cars
+
 
 class Car:
     def __init__(self):

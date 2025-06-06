@@ -13,6 +13,7 @@ def main():
     car = Car()
 
     plot_bounds = parking_lot.PLOT_BOUNDS
+    parking_lot.init_parking_slots(car.CAR_LEN,car.CAR_WID)
 
     # ------------------ OMPL boiler‑plate (state space, dynamics) --------------
 
