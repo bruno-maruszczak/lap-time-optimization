@@ -53,7 +53,7 @@ class Plot:
         #     axA.plot(x, y, color="#bbbbbb", linewidth=1)
         for pc in self.parking_lot.obstacles:
             x, y = pc.exterior.xy
-            axA.fill(x, y, color="#555555")
+            axA.plot(x, y, color="#555555")
 
         car_patch = patches.Rectangle(
             (-self.car.CAR_LEN/2, -self.car.CAR_WID/2),

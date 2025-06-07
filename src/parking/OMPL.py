@@ -20,11 +20,11 @@ class OMPL:
         bounds.setLow(1, self.plot_bounds[2])
         bounds.setHigh(1, self.plot_bounds[3])
         space.setBounds(bounds)
-        print("Bounds object:", bounds)
-        print("Space bounds:", space.getBounds())
         width = bounds.high[0] - bounds.low[0]
         height = bounds.high[1] - bounds.low[1]
-        print(f"Width: {width}, Height: {height}")
+        # print("Bounds object:", bounds)
+        # print("Space bounds:", space.getBounds())
+        # print(f"Width: {width}, Height: {height}")
         return space
 
     def bicycle_ode(self,q, u, qdot):
@@ -106,12 +106,12 @@ class OMPL:
 
         # goal_cx = - (self.parking_lot.N_SPOTS / 2 - 0.5 - self.parking_lot.GOAL_COL) * self.parking_lot.SLOT_W
         # goal_cy = self.parking_lot.ROWS_Y[self.parking_lot.GOAL_ROW]
-        goal_cx = 10.5
-        goal_cy = 10.5
+        goal_cx = 37
+        goal_cy = 2.5
         goal = ob.State(space)
         goal().setX(goal_cx)
         goal().setY(goal_cy)
-        goal().setYaw(math.pi / 2)
+        goal().setYaw(math.pi)
 
         ss.setStartAndGoalStates(start, goal, 0.25)
         ss.getProblemDefinition().setOptimizationObjective(ob.PathLengthOptimizationObjective(si))
