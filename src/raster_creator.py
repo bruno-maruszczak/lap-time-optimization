@@ -12,7 +12,7 @@ img_h = int(20 * scale)  # 20 meters
 
 # Dimensions of spaces:
 # TOP (angled)
-desired_spacing = 2.5  # meters between lines measured perpendicularly
+desired_spacing = 2.5  # meters between lines
 angle_deg = 45
 angle_rad = math.radians(angle_deg)
 spacing_diag = desired_spacing / math.cos(angle_rad) * scale
@@ -66,19 +66,16 @@ for i in range(6):
     draw.line([(x_right, y), (x2, y)], fill=0, width=line_thickness)
 
 # === MIDDLE vertical lines ===
-# Want to center between top and bottom:
 y_middle_top = y_top + int(length_diag * math.sin(angle_rad)) + 60
 y_middle_bottom = y_bottom - int(height_vert) - 60
 middle_y1 = (y_middle_top + y_middle_bottom) // 2 - int(height_middle // 2)
 middle_y2 = middle_y1 + int(height_middle)
 
-for i in range(4):  # only 4 lines → 3 spaces → leaves free space on the right
+for i in range(5):  # only 4 lines, 3 spaces
     x = start_x + int(i * spacing_middle)
     draw.line([(x, middle_y1), (x, middle_y2)], fill=0, width=line_thickness)
 
 # === Draw cars ===
-
-# Helper to draw rotated car rectangle
 def draw_car(center_x, center_y, w, h, angle_deg):
     angle_rad = math.radians(angle_deg)
     dx = w / 2
@@ -97,7 +94,6 @@ def draw_car(center_x, center_y, w, h, angle_deg):
     draw.polygon(rotated_corners, fill=0)
 
 # === Cars in BOTTOM ===
-# Cars should be rotated 90 deg to fit vertical spaces
 x_car_positions_bottom = [
     start_x + spacing_vert * 0 + spacing_vert / 2,
     start_x + spacing_vert * 2 + spacing_vert / 2
@@ -116,15 +112,30 @@ x_car_center_right = x_right - length_horiz / 2
 for y in y_car_positions_right:
     draw_car(x_car_center_right, y, car_length, car_width, 0)
 
+# === Cars in MIDDLE ===
+middle_x_positions = [
+    start_x + spacing_middle * 0 + spacing_middle / 2,
+    start_x + spacing_middle * 2 + spacing_middle / 2
+]
+middle_y_center = (middle_y1 + middle_y2) / 2
+
+for x in middle_x_positions:
+    draw_car(x, middle_y_center, car_length, car_width, 0)
+
 # === Cars in TOP ===
-# In angled spaces → compute center between lines:
-for idx in [2, 4]:  # third and fifth space (idx 2 and 4)
+nx = -math.sin(angle_rad)
+ny = math.cos(angle_rad)
+tx = math.cos(angle_rad)
+ty = math.sin(angle_rad)
+
+depth_offset = (car_length / 5)
+
+for idx in [2, 4]:
     x1 = start_x + idx * spacing_diag
-    x2 = x1 + length_diag * math.cos(angle_rad)
-    y2 = y_top + length_diag * math.sin(angle_rad)
-    # center point between (x1,y_top) and (x2,y2)
-    center_x = (x1 + x2) / 2
-    center_y = (y_top + y2) / 2
+    x2 = x1 + length_diag * tx
+    y2 = y_top + length_diag * ty
+    center_x = (x1 + x2) / 2 + (desired_spacing * scale / 2) * nx - depth_offset * tx
+    center_y = (y_top + y2) / 2 + (desired_spacing * scale / 2) * ny - depth_offset * ty
     draw_car(center_x, center_y, car_length, car_width, 45)
 
 # === Save image and grids ===
