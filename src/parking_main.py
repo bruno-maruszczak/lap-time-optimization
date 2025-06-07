@@ -8,14 +8,16 @@ def main():
     # parking_lot = ParkingLot()
     parking_lot_bitmap = ParkingLotBitMap(os.path.join(os.getcwd(), "data/tracks/parking_layout.npy"))
     parking_lot_bitmap.get_obstacles()
-    parking_lot_bitmap.plot()
+    # print(parking_lot_bitmap.obstacles)
+
+    plot_bounds = parking_lot_bitmap.PLOT_BOUNDS
+    # Debug plotting
+    # parking_lot_bitmap.plot()
+    # parking_lot_bitmap.map_plot(plot_bounds)
 
     car = Car()
 
-    plot_bounds = parking_lot_bitmap.PLOT_BOUNDS
-    print(plot_bounds)
     # parking_lot.init_parking_slots(car.CAR_LEN,car.CAR_WID)
-
     ompl = OMPL(plot_bounds, car, parking_lot_bitmap)
 
     

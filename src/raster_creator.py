@@ -31,11 +31,12 @@ img = Image.new("L", (img_w, img_h), 255)
 draw = ImageDraw.Draw(img)
 
 # Granica mapy
-draw.rectangle([0, 0, img_w - 1, img_h - 1], outline=0, width=border_thickness)
+# draw.rectangle([0, 0, img_w - 1, img_h - 1], outline=0, width=border_thickness)
+
 
 # GÓRA: skośne linie (start od góry)
 start_x = int(2 * scale)
-y_top = 0
+y_top =20
 for i in range(6):
     x1 = start_x + int(i * spacing_diag)
     x2 = x1 + int(length_diag * math.cos(math.radians(45)))
@@ -43,14 +44,14 @@ for i in range(6):
     draw.line([(x1, y_top), (x2, y2)], fill=0, width=line_thickness)
 
 # DÓŁ: pionowe linie (od dołu w górę)
-y_bottom = img_h - 1
+y_bottom = img_h - 20
 for i in range(6):
     x = start_x + int(i * spacing_vert)
     y1 = y_bottom - int(height_vert)
     draw.line([(x, y1), (x, y_bottom)], fill=0, width=line_thickness)
 
 # PRAWA: poziome linie (od prawej krawędzi w lewo)
-x_right = img_w - 1
+x_right = img_w - 20
 for i in range(6):
     y = int(2 * scale) + int(i * spacing_horiz)
     x2 = x_right - int(length_horiz)

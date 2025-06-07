@@ -25,7 +25,7 @@ class Plot:
 
         for obs in self.parking_lot.obstacles:
             x, y = obs.exterior.xy
-            ax.fill(x, y, color="#444444")
+            ax.plot(x, y, color="#902626")
 
         for m, (coords, L) in self.results.items():
             xs, ys = zip(*[(x, y) for (x, y, _) in coords])

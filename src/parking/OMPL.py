@@ -1,5 +1,6 @@
 from ompl import base as ob
 from ompl import control as oc
+import matplotlib.pyplot as plt
 import math
 
 # ------------------ OMPL boiler‑plate (state space, dynamics) --------------
@@ -19,6 +20,11 @@ class OMPL:
         bounds.setLow(1, self.plot_bounds[2])
         bounds.setHigh(1, self.plot_bounds[3])
         space.setBounds(bounds)
+        print("Bounds object:", bounds)
+        print("Space bounds:", space.getBounds())
+        width = bounds.high[0] - bounds.low[0]
+        height = bounds.high[1] - bounds.low[1]
+        print(f"Width: {width}, Height: {height}")
         return space
 
     def bicycle_ode(self,q, u, qdot):
@@ -40,7 +46,24 @@ class OMPL:
 
     def is_state_valid(self, state):
         car_polygon = self.car.polygon(state.getX(), state.getY(), state.getYaw())
-        # Keep inside global bounds
+       
+        # For debug
+        # for i, boundary in enumerate(self.parking_lot.obstacles):
+        #     if boundary.contains(car_polygon):
+        #         print(f"State collides with boundary {i}")
+        #         try:
+        #             x, y = car_polygon.exterior.xy
+        #             plt.plot(x, y, label='Car')
+        #             bx, by = boundary.exterior.xy
+        #             plt.plot(bx, by, label=f'Boundary {i}')
+        #             plt.legend()
+        #             plt.title(f"Collision with boundary {i}")
+        #             plt.show()
+        #         except Exception as e:
+        #             print(f"Plotting failed: {e}")
+        #     else: 
+        #         print("state does not collide")
+        
         if not self.parking_lot.lot_boundary.contains(car_polygon):
             return False
         # Collision with any parked car
@@ -74,9 +97,9 @@ class OMPL:
 
         # ------------------ Planner wrapper ----------------------------------------
         start = ob.State(space)
-        start_x = 10.0
+        start_x = 5.0
         # start_y = self.parking_lot.Y_MIN + self.car.CAR_LEN / 2 + 0.5  # keep entire car inside bounds
-        start_y = 10.0
+        start_y = 6.0
         start().setX(start_x)
         start().setY(start_y)  # just below the first row
         start().setYaw(math.pi * 0.95)  # facing "up"
