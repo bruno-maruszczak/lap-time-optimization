@@ -7,3 +7,4 @@ lap_time_venv
 .vscode
 *.pkl
 sim_results.json
+.idea
